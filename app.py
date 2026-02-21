@@ -16,7 +16,9 @@ app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-only-change-me")
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
-    SESSION_COOKIE_SECURE=bool(os.environ.get("FLASK_HTTPS")),  # set FLASK_HTTPS=1 behind HTTPS
+    SESSION_COOKIE_SECURE=bool(
+        os.environ.get("FLASK_HTTPS")
+    ),  # set FLASK_HTTPS=1 behind HTTPS
 )
 
 csrf = CSRFProtect(app)
@@ -39,7 +41,10 @@ def fetch_countries():
 
 def get_countries_cached():
     now = time.time()
-    if _COUNTRY_CACHE["data"] is None or (now - _COUNTRY_CACHE["fetched_at"]) > CACHE_TTL_SECONDS:
+    if (
+        _COUNTRY_CACHE["data"] is None
+        or (now - _COUNTRY_CACHE["fetched_at"]) > CACHE_TTL_SECONDS
+    ):
         _COUNTRY_CACHE["data"] = fetch_countries()
         _COUNTRY_CACHE["fetched_at"] = now
     return _COUNTRY_CACHE["data"]
@@ -51,7 +56,9 @@ def norm_text(s: str) -> str:
     if not s:
         return ""
     s = s.strip().lower()
-    s = "".join(c for c in unicodedata.normalize("NFKD", s) if not unicodedata.combining(c))
+    s = "".join(
+        c for c in unicodedata.normalize("NFKD", s) if not unicodedata.combining(c)
+    )
     s = re.sub(r"[^a-z0-9]+", " ", s)
     return re.sub(r"\s+", " ", s).strip()
 
@@ -128,7 +135,9 @@ EXTRA_CURRENCY_ALIASES_BY_CODE = {
 }
 
 
-def currency_aliases(code: str, name: str, symbol: str | None, single_currency_country: bool):
+def currency_aliases(
+    code: str, name: str, symbol: str | None, single_currency_country: bool
+):
     """
     Build acceptable aliases for one currency:
     - ISO code always accepted
@@ -142,7 +151,7 @@ def currency_aliases(code: str, name: str, symbol: str | None, single_currency_c
     aliases = set()
 
     if code_u:
-        aliases.add(code_u)           # ISO code (raw)
+        aliases.add(code_u)  # ISO code (raw)
         aliases.add(norm_text(code_u))  # mostly redundant, but safe
 
     if name_n:
@@ -182,9 +191,9 @@ def currency_guess_is_correct(guess_raw: str, currency_objects: list[dict]) -> b
     if not guess_raw:
         return False
 
-    guess_code = norm_code(guess_raw)         # e.g. "usd", "USD", "U.S.D." -> "USD"
-    guess_name = norm_text(guess_raw)         # name-like normalization
-    guess_symbol = guess_raw                  # keep raw for symbol exact match
+    guess_code = norm_code(guess_raw)  # e.g. "usd", "USD", "U.S.D." -> "USD"
+    guess_name = norm_text(guess_raw)  # name-like normalization
+    guess_symbol = guess_raw  # keep raw for symbol exact match
 
     single = len(currency_objects) == 1
 
@@ -205,7 +214,9 @@ def currency_guess_is_correct(guess_raw: str, currency_objects: list[dict]) -> b
 
         # If alias is a raw symbol, compare to raw; otherwise compare normalized text
         for a in aliases:
-            if len(a) <= 4 and any(ch in a for ch in "€£$¥₩₽₹₺₫₦₱₲₴₡₸₺₵₭₮₪₨"):  # crude "symbol-ish" check
+            if len(a) <= 4 and any(
+                ch in a for ch in "€£$¥₩₽₹₺₫₦₱₲₴₡₸₺₵₭₮₪₨"
+            ):  # crude "symbol-ish" check
                 if single and guess_symbol == a:
                     return True
             else:
@@ -273,7 +284,9 @@ def index():
         current = session["current"]
     else:
         seen = set(session["seen"])
-        unseen = [c for c in countries if ((c.get("name") or {}).get("common") not in seen)]
+        unseen = [
+            c for c in countries if ((c.get("name") or {}).get("common") not in seen)
+        ]
         if not unseen:
             session["seen"] = []
             unseen = countries
@@ -330,7 +343,9 @@ def submit():
     population = current.get("population")
     if isinstance(population, int) and population > 0:
         total += 1
-        raw_display = (request.form.get("population_display", "") or "").strip()  # if you ever add it
+        raw_display = (
+            request.form.get("population_display", "") or ""
+        ).strip()  # if you ever add it
         raw_hidden = (request.form.get("population", "") or "").strip()
         raw = raw_display or raw_hidden  # show the pretty one if present
 
@@ -394,9 +409,11 @@ def reset():
     session.clear()
     return redirect(url_for("index"))
 
+
 @app.get("/health")
 def health():
     return "ok", 200
+
 
 def warm_country_cache():
     try:
