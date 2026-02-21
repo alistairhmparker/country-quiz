@@ -14,7 +14,7 @@ The application is lightweight, stateless on the server side (beyond session coo
   - ISO codes (e.g. USD, GBP)
   - Exact currency names
   - Limited curated aliases
-- Case- and accent-insensitive text matching
+- Case and accent insensitive text matching
 - CSRF protection via Flask-WTF
 - API response caching for performance
 - Mobile-friendly interface
