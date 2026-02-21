@@ -41,13 +41,25 @@ def fetch_countries():
 
 def get_countries_cached():
     now = time.time()
-    if (
-        _COUNTRY_CACHE["data"] is None
-        or (now - _COUNTRY_CACHE["fetched_at"]) > CACHE_TTL_SECONDS
-    ):
-        _COUNTRY_CACHE["data"] = fetch_countries()
+
+    # If we have data and it's still fresh, just return it
+    if _COUNTRY_CACHE["data"] is not None and (now - _COUNTRY_CACHE["fetched_at"]) <= CACHE_TTL_SECONDS:
+        return _COUNTRY_CACHE["data"]
+
+    # Otherwise try to refresh
+    try:
+        data = fetch_countries()
+        _COUNTRY_CACHE["data"] = data
         _COUNTRY_CACHE["fetched_at"] = now
-    return _COUNTRY_CACHE["data"]
+        return data
+    except Exception as e:
+        # If refresh fails but we have old data, serve stale cache
+        if _COUNTRY_CACHE["data"] is not None:
+            app.logger.warning(f"RestCountries refresh failed; serving stale cache. Error: {e}")
+            return _COUNTRY_CACHE["data"]
+
+        # No cached data at all: re-raise (site can't function without any country list)
+        raise
 
 
 # --- Normalisation helpers ---
