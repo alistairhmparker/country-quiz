@@ -186,6 +186,7 @@
             <p class="score-total">out of {{ total }}</p>
         </div>
 
+        <div class="results-list" role="list" aria-label="Answer breakdown">
         {% for r in results %}
         <div class="result-item {{ 'correct' if r.ok else 'wrong' }}" role="listitem">
             <strong>{{ r.field }}:</strong>
@@ -197,6 +198,7 @@
             {% endif %}
         </div>
         {% endfor %}
+        </div>
 
         <div class="actions">
             <a class="btn" href="/">Play Again</a>
