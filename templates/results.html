@@ -1,0 +1,207 @@
+<!-- templates/results.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Results</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: #0f1923;
+            background-image: radial-gradient(ellipse at 20% 50%, #1a2a3a 0%, transparent 60%),
+                              radial-gradient(ellipse at 80% 20%, #1a1f2e 0%, transparent 50%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Source Sans 3', sans-serif;
+            color: #e8dcc8;
+            padding: 12px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 580px;
+            padding: 20px;
+            animation: fadeIn 0.8s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            color: #c9a84c;
+            letter-spacing: 2px;
+        }
+
+        .country-name {
+            font-size: 0.85rem;
+            color: #7a8a9a;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-top: 6px;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            background: #162030;
+            border: 1px solid #2a4060;
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            font-size: 0.85rem;
+            color: #7a8a9a;
+            letter-spacing: 1px;
+            flex-wrap: wrap;
+        }
+
+        .score-card {
+            background: linear-gradient(135deg, #1a2a3a, #162030);
+            border: 1px solid #2a4060;
+            border-radius: 12px;
+            padding: 26px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .score-label {
+            font-size: 0.75rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: #7a8a9a;
+            margin-bottom: 12px;
+        }
+
+        .score-number {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.3rem;
+            color: #c9a84c;
+            line-height: 1;
+        }
+
+        .score-total {
+            font-size: 1rem;
+            color: #7a8a9a;
+            margin-top: 6px;
+        }
+
+        .results-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .result-item {
+            background: #162030;
+            border: 1px solid #2a4060;
+            border-radius: 10px;
+            padding: 16px 18px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+
+        .tolerance-note {
+            margin-top: 6px;
+            font-size: 0.8rem;
+            color: #627386;
+            font-style: italic;
+        }
+
+        .result-item.correct { border-left: 3px solid #4caf7a; }
+        .result-item.wrong { border-left: 3px solid #c9504c; }
+        .result-item div { color: #7a8a9a; margin-top: 6px; }
+        .result-item strong { color: #e8dcc8; }
+
+        .actions {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .btn {
+            display: inline-block;
+            width: 100%;
+            text-align: center;
+            padding: 16px;
+            background: linear-gradient(135deg, #c9a84c, #a8863a);
+            color: #0f1923;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(201,168,76,0.3);
+        }
+
+        .link {
+            text-align: center;
+            color: #7a8a9a;
+            font-size: 0.9rem;
+            text-decoration: none;
+        }
+        .link:hover { color: #c9a84c; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="stats-bar" aria-label="Quiz stats">
+            <span>🌍 {{ countries_seen }} explored</span>
+            <span>🏆 {{ total_score }} / {{ total_possible }} points</span>
+            <span>🔄 {{ rounds }} rounds</span>
+        </div>
+
+        <div class="header">
+            <h1>Results</h1>
+            <p class="country-name">{{ name }}</p>
+        </div>
+
+        <div class="score-card" role="group" aria-label="Round score">
+            <p class="score-label">Your Score</p>
+            <p class="score-number">{{ score }}</p>
+            <p class="score-total">out of {{ total }}</p>
+        </div>
+
+        {% for r in results %}
+        <div class="result-item {{ 'correct' if r.ok else 'wrong' }}" role="listitem">
+            <strong>{{ r.field }}:</strong>
+            <div>Your answer: {{ r.your_answer }}</div>
+            <div>Answer: {{ r.correct_answer }}</div>
+
+            {% if r.field == "Population" %}
+            <div class="tolerance-note">Accepted within ±20%</div>
+            {% endif %}
+        </div>
+        {% endfor %}
+
+        <div class="actions">
+            <a class="btn" href="/">Play Again</a>
+            <a class="link" href="/reset">Reset stats</a>
+        </div>
+    </div>
+</body>
+</html>
