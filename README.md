@@ -49,7 +49,7 @@ http://127.0.0.1:5000
 ```
 
 ## Deployment (Render)
-The app is configured for straightforward deployment on Render or similar platforms.
+The app is configured for straightforward deployment on Render or similar platforms. Render Free sleeps after inactivity; see .github/workflows/ping.yml for keep-awake pings.
 
 **Build command**
 ```bash
@@ -58,7 +58,7 @@ pip install -r requirements.txt
 
 **Start command**
 ```bash
-gunicorn app:app
+gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --threads 2 --timeout 60
 ```
 
 **Required environment variable**
