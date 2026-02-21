@@ -398,6 +398,17 @@ def reset():
 def health():
     return "ok", 200
 
+def warm_country_cache():
+    try:
+        get_countries_cached()
+        app.logger.info("Country cache warmed")
+    except Exception as e:
+        app.logger.warning(f"Cache warm failed: {e}")
+
+
+# Warm cache when worker starts
+warm_country_cache()
+
 if __name__ == "__main__":
 
     app.run(debug=True)
