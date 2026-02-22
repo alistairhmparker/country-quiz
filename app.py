@@ -144,6 +144,9 @@ EXTRA_CURRENCY_ALIASES_BY_CODE = {
     "KRW": {"won"},
     "INR": {"rupee"},
     "RUB": {"ruble", "rouble"},
+    # CFA francs
+    "XAF": {"cfa franc", "central african cfa franc", "cfa"},
+    "XOF": {"cfa franc", "west african cfa franc", "cfa"},
 }
 
 
