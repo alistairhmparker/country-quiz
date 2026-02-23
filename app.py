@@ -4,12 +4,11 @@ import time
 import random
 import json
 import pathlib
-import re
 
 import requests
 from flask import Flask, session, render_template, request, redirect, url_for
 from flask_wtf import CSRFProtect
-from utils import norm_text, norm_code, safe_first, parse_population_strict
+from utils import norm_text, safe_first, parse_population_strict
 from rules.currency import (
     currency_guess_is_correct,
     format_currency_answer,
@@ -17,7 +16,6 @@ from rules.currency import (
 from rules.language import language_guess_is_correct
 from rules.competition import validate_player_name
 from rules.competition import is_complete_country
-from rules.language import language_guess_is_correct
 from leaderboard import record_score, get_top_entries, format_played_at
 
 
@@ -559,7 +557,7 @@ def stats():
 @app.route("/reset")
 def reset():
     session.clear()
-    return redirect(url_for("index"))
+    return redirect(url_for("free"))
 
 
 @app.route("/dev/test", methods=["GET", "POST"])
