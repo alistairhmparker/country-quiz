@@ -1,23 +1,14 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <title>Competition Summary</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style>
-      body { font-family: system-ui, sans-serif; margin: 24px; max-width: 900px; }
-      .card { border: 1px solid #e5e5e5; border-radius: 12px; padding: 18px; }
-      .actions { margin-top: 16px; display:flex; gap: 10px; flex-wrap: wrap; }
-      a.btn {
-        display:inline-block; padding:10px 14px; border-radius:10px;
-        border:1px solid #ddd; background:#fafafa; font-weight:650;
-        text-decoration:none; color:#111;
-      }
-      a.btn:hover { background:#f2f2f2; }
-      .muted { color:#555; }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='unified.css') }}">
   </head>
   <body>
+    <main class="page">
     <h1>Competition Summary</h1>
 
     <div class="card">
@@ -43,25 +34,26 @@
 
   {% if leaderboard %}
     <h2>Leaderboard (Top 20)</h2>
-    <table style="width:100%; border-collapse:collapse; margin-top:12px;">
+    <table>
       <thead>
         <tr>
-          <th style="border:1px solid #ddd; padding:10px; text-align:left;">Name</th>
-          <th style="border:1px solid #ddd; padding:10px; text-align:left;">Score</th>
-          <th style="border:1px solid #ddd; padding:10px; text-align:left;">Date (UTC)</th>
+          <th>Name</th>
+          <th>Score</th>
+          <th>Date (UTC)</th>
         </tr>
       </thead>
       <tbody>
         {% for e in leaderboard %}
         <tr>
-          <td style="border:1px solid #ddd; padding:10px;">{{ e.name }}</td>
-          <td style="border:1px solid #ddd; padding:10px;">{{ e.score }}/20</td>
-          <td style="border:1px solid #ddd; padding:10px;">{{ e.played_at }}</td>
+          <td>{{ e.name }}</td>
+          <td>{{ e.score }}/20</td>
+          <td>{{ e.played_at }}</td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
   {% endif %}
 
+      </main>
   </body>
 </html>

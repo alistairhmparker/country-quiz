@@ -1,25 +1,14 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <title>Stats / About – Country Quiz</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style>
-      body { font-family: system-ui, sans-serif; margin: 24px; max-width: 900px; }
-      .card { border: 1px solid #e5e5e5; border-radius: 12px; padding: 18px; }
-      table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-      th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-      .actions { margin-top: 16px; display:flex; gap: 10px; flex-wrap: wrap; }
-      a.btn {
-        display:inline-block; padding:10px 14px; border-radius:10px;
-        border:1px solid #ddd; background:#fafafa; font-weight:650;
-        text-decoration:none; color:#111;
-      }
-      a.btn:hover { background:#f2f2f2; }
-      .muted { color: #555; }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='unified.css') }}">
   </head>
   <body>
+    <main class="page">
     <h1>Stats / About</h1>
 
     <div class="card">
@@ -69,5 +58,6 @@
       <a class="btn" href="{{ url_for('free') }}">Free mode</a>
       <a class="btn" href="{{ url_for('competition_start') }}">Competition</a>
     </div>
+      </main>
   </body>
 </html>
