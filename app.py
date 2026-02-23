@@ -13,6 +13,8 @@ from rules.currency import (
     currency_guess_is_correct,
     format_currency_answer,
 )
+from rules.language import language_guess_is_correct
+
 
 app = Flask(__name__)
 
@@ -242,12 +244,12 @@ def submit():
     if languages:
         total += 1
         raw = request.form.get("language", "").strip()
-        ok = norm_text(raw) in [norm_text(l) for l in languages]
+        ok = language_guess_is_correct(raw, languages)
         if ok:
             score += 1
         add_result("Language", ok, raw, ", ".join(languages))
 
-    # --- Currency (Rule 4 polished + ISO) ---
+    # --- Currency ---
     currency_objects = current.get("currencies") or []
     if currency_objects:
         total += 1
@@ -362,12 +364,12 @@ def dev_test():
         if languages:
             total += 1
             raw = (request.form.get("language") or "").strip()
-            ok = norm_text(raw) in [norm_text(l) for l in languages]
+            ok = language_guess_is_correct(raw, languages)
             if ok:
                 score += 1
             add_result("Language", ok, raw, ", ".join(languages))
 
-        # Currency (your Rule 4)
+        # Currency
         currency_objects = fields.get("currencies") or []
         if currency_objects:
             total += 1
