@@ -1,0 +1,140 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Dev Test Harness</title>
+    <style>
+      body { font-family: system-ui, sans-serif; margin: 24px; max-width: 900px; }
+      label { display:block; margin-top: 12px; font-weight: 600; }
+      input, select { width: 100%; padding: 8px; margin-top: 6px; box-sizing: border-box; }
+      button { margin-top: 16px; padding: 10px 14px; }
+      table { width: 100%; border-collapse: collapse; margin-top: 18px; }
+      th, td { border: 1px solid #ddd; padding: 10px; vertical-align: top; }
+      .ok { font-weight: 700; }
+      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 14px; }
+      .card { border: 1px solid #eee; padding: 14px; border-radius: 10px; }
+      .muted { color: #666; font-size: 0.95em; }
+      @media (max-width: 820px) { .grid { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <h1>Dev Test Harness</h1>
+    <p class="muted">
+      Pick a country, see the ground truth (read-only), then submit guesses using the same rules as the game.
+      (Dev-only)
+    </p>
+
+    <!-- Country selector (GET): choosing a country reloads and shows correct answers -->
+    <form method="get">
+      <label>Country</label>
+      <select name="country" required onchange="this.form.submit()">
+        <option value="">-- Select --</option>
+        {% for n in country_names %}
+          <option value="{{ n }}" {% if n == selected_name %}selected{% endif %}>{{ n }}</option>
+        {% endfor %}
+      </select>
+      <noscript><button type="submit">Load</button></noscript>
+    </form>
+
+    {% if fields %}
+      <div class="grid">
+        <!-- Correct answers -->
+        <div class="card">
+          <h2 style="margin:0 0 8px 0;">Correct answers</h2>
+          <p class="muted" style="margin:0 0 10px 0;">Read-only</p>
+
+          <label>Capital</label>
+          <input readonly value="{{ fields.capital or '—' }}" />
+
+          <label>Population</label>
+          <input readonly value="{{ '{:,}'.format(fields.population) if fields.population else '—' }}" />
+
+          <label>Languages</label>
+          <input readonly value="{{ (fields.languages|join(', ')) if fields.languages else '—' }}" />
+
+          <label>Currencies</label>
+          <input readonly value="{{ format_currency_answer(fields.currencies) if fields.currencies else '—' }}" />
+        </div>
+
+        <!-- Guess form (POST) -->
+        <div class="card">
+          <h2 style="margin:0 0 8px 0;">Try your guesses</h2>
+          <p class="muted" style="margin:0 0 10px 0;">Inputs stay blank after submit</p>
+
+          <form method="post" autocomplete="off">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="country" value="{{ selected_name }}">
+
+            <label>Capital (guess)</label>
+            <input name="capital" value="" placeholder="e.g., Dakar" autocomplete="off" />
+
+            <label>Population (guess, digits only)</label>
+            <input
+                name="population_display"
+                id="population_display"
+                placeholder="e.g., 18,100,000"
+                inputmode="numeric"
+                autocomplete="off"
+            />
+            <input type="hidden" name="population" id="population_hidden" />
+
+            <label>Language (guess)</label>
+            <input name="language" value="" placeholder="e.g., French" autocomplete="off" />
+
+            <label>Currency (guess)</label>
+            <input name="currency" value="" placeholder="e.g., cfa franc" autocomplete="off" />
+
+            <button type="submit">Test</button>
+          </form>
+        </div>
+      </div>
+    {% endif %}
+
+    {% if results %}
+      <h2>Results</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Field</th>
+            <th>OK?</th>
+            <th>Your answer</th>
+            <th>Correct answer</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in results %}
+            <tr>
+              <td>{{ r.field }}</td>
+              <td class="ok">{{ "✅" if r.ok else "❌" }}</td>
+              <td>{{ r.your_answer }}</td>
+              <td>{{ r.correct_answer }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+
+    <script>
+    const displayInput = document.getElementById("population_display");
+    const hiddenInput = document.getElementById("population_hidden");
+
+    if (displayInput && hiddenInput) {
+        displayInput.addEventListener("input", function () {
+        // Remove everything except digits
+        const digits = this.value.replace(/\D/g, "");
+
+        // Store digits in hidden input (server receives this)
+        hiddenInput.value = digits;
+
+        // Format with commas for display
+        if (digits.length > 0) {
+            this.value = Number(digits).toLocaleString("en-GB");
+        } else {
+            this.value = "";
+        }
+        });
+    }
+    </script>
+
+  </body>
+</html>

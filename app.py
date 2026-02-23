@@ -2,12 +2,17 @@
 import os
 import time
 import random
-import unicodedata
-import re
+import json
+import pathlib
 
 import requests
 from flask import Flask, session, render_template, request, redirect, url_for
 from flask_wtf import CSRFProtect
+from utils import norm_text, norm_code, safe_first, parse_population_strict
+from rules.currency import (
+    currency_guess_is_correct,
+    format_currency_answer,
+)
 
 app = Flask(__name__)
 
@@ -23,10 +28,44 @@ app.config.update(
 
 csrf = CSRFProtect(app)
 
+DEV_TOOLS_ENABLED = os.environ.get("DEV_TOOLS_ENABLED") == "1"
+
 RESTCOUNTRIES_URL = (
     "https://restcountries.com/v3.1/all"
     "?fields=name,capital,population,languages,currencies,flag,subregion,area,borders"
 )
+
+# --- Data / fallback ---
+DATA_DIR = pathlib.Path(__file__).resolve().parent / "data"
+LOCAL_COUNTRIES_FALLBACK = DATA_DIR / "countries_fallback.json"
+
+FALLBACK_REFRESH_DAYS = 7
+FALLBACK_REFRESH_SECONDS = FALLBACK_REFRESH_DAYS * 24 * 60 * 60
+
+
+def load_fallback_countries():
+    if not LOCAL_COUNTRIES_FALLBACK.exists():
+        return None
+    with LOCAL_COUNTRIES_FALLBACK.open("r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def save_fallback_countries(data):
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    # atomic-ish write: write temp then replace
+    tmp_path = LOCAL_COUNTRIES_FALLBACK.with_suffix(".tmp")
+    with tmp_path.open("w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False)
+    tmp_path.replace(LOCAL_COUNTRIES_FALLBACK)
+
+
+def fallback_is_stale(now: float) -> bool:
+    try:
+        mtime = LOCAL_COUNTRIES_FALLBACK.stat().st_mtime
+        return (now - mtime) > FALLBACK_REFRESH_SECONDS
+    except FileNotFoundError:
+        return True
+
 
 # --- Cache ---
 _COUNTRY_CACHE = {"data": None, "fetched_at": 0.0}
@@ -51,212 +90,36 @@ def get_countries_cached():
         data = fetch_countries()
         _COUNTRY_CACHE["data"] = data
         _COUNTRY_CACHE["fetched_at"] = now
+
+
+        # Periodically refresh local fallback file (best effort; never breaks the request)
+        try:
+            if fallback_is_stale(now):
+                save_fallback_countries(data)
+                app.logger.info("Refreshed local fallback countries JSON")
+        except Exception as e:
+            app.logger.warning(f"Failed to refresh fallback JSON: {e}")
         return data
+    
     except Exception as e:
         # If refresh fails but we have old data, serve stale cache
         if _COUNTRY_CACHE["data"] is not None:
             app.logger.warning(f"RestCountries refresh failed; serving stale cache. Error: {e}")
             return _COUNTRY_CACHE["data"]
 
-        # No cached data at all: re-raise (site can't function without any country list)
+        # No cached data at all: try local fallback
+        try:
+            data = load_fallback_countries()
+            if data:
+                _COUNTRY_CACHE["data"] = data
+                _COUNTRY_CACHE["fetched_at"] = now
+                
+                app.logger.warning("Loaded countries from local fallback JSON")
+                return data
+        except Exception as e2:
+            app.logger.warning(f"Failed to load fallback JSON: {e2}")
+
         raise
-
-
-# --- Normalisation helpers ---
-def norm_text(s: str) -> str:
-    """Lowercase, strip, remove accents, collapse spaces, drop punctuation."""
-    if not s:
-        return ""
-    s = s.strip().lower()
-    s = "".join(
-        c for c in unicodedata.normalize("NFKD", s) if not unicodedata.combining(c)
-    )
-    s = re.sub(r"[^a-z0-9]+", " ", s)
-    return re.sub(r"\s+", " ", s).strip()
-
-
-def norm_code(s: str) -> str:
-    """Extract letters only and uppercase (good for ISO codes)."""
-    if not s:
-        return ""
-    return re.sub(r"[^A-Za-z]+", "", s).upper()
-
-
-def safe_first(lst):
-    return lst[0] if lst else None
-
-
-def parse_population_strict(raw: str):
-    """
-    Strict numeric parsing:
-    Accepts digits with optional commas/spaces. Rejects anything else.
-    """
-    if raw is None:
-        return None
-    s = raw.strip().replace(",", "").replace(" ", "")
-    if not s or not s.isdigit():
-        return None
-    if len(s) > 15:
-        return None
-    return int(s)
-
-
-# --- Currency matching (Rule 4 polished) ---
-GENERIC_CURRENCY_TYPES = {
-    "dollar",
-    "peso",
-    "franc",
-    "riyal",
-    "rial",
-    "dinar",
-    "dirham",
-    "rupee",
-    "ruble",
-    "rouble",
-    "krona",
-    "krone",
-    "kronor",
-    "koruna",
-    "crown",
-    "yen",
-    "yuan",
-    "renminbi",
-    "won",
-    "rand",
-    "real",
-    "zloty",
-    "forint",
-    "leu",
-    "lei",
-    "lira",
-    "shekel",
-    "shilling",
-    "baht",
-}
-
-# A small curated extras map (kept tight; no fuzz)
-EXTRA_CURRENCY_ALIASES_BY_CODE = {
-    "USD": {"us dollar", "u s dollar"},
-    "GBP": {"pound sterling", "sterling", "pound"},
-    "EUR": {"euro"},
-    "JPY": {"yen"},
-    "CNY": {"yuan", "renminbi", "rmb"},
-    "KRW": {"won"},
-    "INR": {"rupee"},
-    "RUB": {"ruble", "rouble"},
-    # CFA francs
-    "XAF": {"cfa franc", "central african cfa franc", "cfa"},
-    "XOF": {"cfa franc", "west african cfa franc", "cfa"},
-}
-
-
-def currency_aliases(
-    code: str, name: str, symbol: str | None, single_currency_country: bool
-):
-    """
-    Build acceptable aliases for one currency:
-    - ISO code always accepted
-    - exact currency name accepted (normalized)
-    - curated aliases for certain codes (e.g., USD, GBP)
-    - generic currency-type words accepted ONLY if single-currency-country AND type appears in name
-    - symbol accepted ONLY if single-currency-country (to avoid ambiguity)
-    """
-    code_u = (code or "").upper()
-    name_n = norm_text(name)
-    aliases = set()
-
-    if code_u:
-        aliases.add(code_u)  # ISO code (raw)
-        aliases.add(norm_text(code_u))  # mostly redundant, but safe
-
-    if name_n:
-        aliases.add(name_n)
-
-    # curated extras by ISO code
-    for a in EXTRA_CURRENCY_ALIASES_BY_CODE.get(code_u, set()):
-        aliases.add(norm_text(a))
-
-    # generic-type acceptance only when unambiguous (single currency country)
-    if single_currency_country and name_n:
-        for t in GENERIC_CURRENCY_TYPES:
-            if t in name_n.split():
-                aliases.add(t)
-
-    # symbol acceptance only when unambiguous (single currency country)
-    if single_currency_country and symbol:
-        # store raw symbol as-is (we'll compare raw trimmed)
-        aliases.add(symbol.strip())
-
-    return aliases
-
-
-def currency_guess_is_correct(guess_raw: str, currency_objects: list[dict]) -> bool:
-    """
-    Determine if the guess matches any currency (Rule 4 polished):
-    - ISO code match (letters-only) is strongest
-    - exact name match (normalized)
-    - curated aliases
-    - optional symbol match only if unambiguous
-    - optional generic type word only if unambiguous
-    """
-    if not guess_raw:
-        return False
-
-    guess_raw = guess_raw.strip()
-    if not guess_raw:
-        return False
-
-    guess_code = norm_code(guess_raw)  # e.g. "usd", "USD", "U.S.D." -> "USD"
-    guess_name = norm_text(guess_raw)  # name-like normalization
-    guess_symbol = guess_raw  # keep raw for symbol exact match
-
-    single = len(currency_objects) == 1
-
-    # First: ISO code check
-    if guess_code:
-        for c in currency_objects:
-            if guess_code == (c.get("code") or "").upper():
-                return True
-
-    # Then: name/alias checks
-    for c in currency_objects:
-        aliases = currency_aliases(
-            code=c.get("code") or "",
-            name=c.get("name") or "",
-            symbol=c.get("symbol"),
-            single_currency_country=single,
-        )
-
-        # If alias is a raw symbol, compare to raw; otherwise compare normalized text
-        for a in aliases:
-            if len(a) <= 4 and any(
-                ch in a for ch in "€£$¥₩₽₹₺₫₦₱₲₴₡₸₺₵₭₮₪₨"
-            ):  # crude "symbol-ish" check
-                if single and guess_symbol == a:
-                    return True
-            else:
-                if guess_name and guess_name == a:
-                    return True
-
-    return False
-
-
-def format_currency_answer(currency_objects: list[dict]) -> str:
-    """
-    Pretty answer like:
-    'USD — United States dollar; ...'
-    """
-    parts = []
-    for c in currency_objects:
-        code = (c.get("code") or "").upper()
-        name = c.get("name") or ""
-        if code and name:
-            parts.append(f"{code} — {name}")
-        elif name:
-            parts.append(name)
-        elif code:
-            parts.append(code)
-    return "; ".join(parts) if parts else ""
 
 
 def get_country_fields(country: dict):
@@ -423,6 +286,116 @@ def submit():
 def reset():
     session.clear()
     return redirect(url_for("index"))
+
+
+@app.route("/dev/test", methods=["GET", "POST"])
+def dev_test():
+    if not DEV_TOOLS_ENABLED:
+        return "Dev tools disabled", 404
+
+    countries = get_countries_cached()
+
+    # Build dropdown list (common names)
+    country_names = sorted(
+        [(c.get("name") or {}).get("common") for c in countries if (c.get("name") or {}).get("common")]
+    )
+
+    selected_name = (request.values.get("country") or "").strip()
+    selected_country = None
+    if selected_name:
+        for c in countries:
+            if ((c.get("name") or {}).get("common") == selected_name):
+                selected_country = c
+                break
+
+    results = None
+    fields = None
+
+    # If a country is selected (GET or POST), compute fields so the template can show "Correct answers"
+    if selected_country:
+        fields = get_country_fields(selected_country)
+
+    if request.method == "POST" and selected_country:
+        fields = get_country_fields(selected_country)
+
+        # Use the same scoring logic as /submit (but without sessions)
+        score = 0
+        total = 0
+        results = []
+
+        def add_result(field: str, ok: bool, your_answer: str, correct_answer: str):
+            results.append(
+                {
+                    "field": field,
+                    "ok": ok,
+                    "your_answer": your_answer if your_answer else "—",
+                    "correct_answer": correct_answer if correct_answer else "—",
+                }
+            )
+
+        # Capital
+        capital = fields.get("capital")
+        if capital:
+            total += 1
+            raw = (request.form.get("capital") or "").strip()
+            ok = norm_text(raw) == norm_text(capital)
+            if ok:
+                score += 1
+            add_result("Capital", ok, raw, capital)
+
+        # Population (+/- 20%)
+        population = fields.get("population")
+        if isinstance(population, int) and population > 0:
+            total += 1
+            raw_hidden = (request.form.get("population") or "").strip()
+            guess_num = parse_population_strict(raw_hidden)
+            ok = False if guess_num is None else (abs(guess_num - population) / population) <= 0.20
+            if ok:
+                score += 1
+            your_display = raw_hidden
+            if guess_num is not None:
+                your_display = f"{guess_num:,}"
+            add_result("Population", ok, your_display, f"{population:,}")
+
+        # Language (accept any listed)
+        languages = fields.get("languages") or []
+        if languages:
+            total += 1
+            raw = (request.form.get("language") or "").strip()
+            ok = norm_text(raw) in [norm_text(l) for l in languages]
+            if ok:
+                score += 1
+            add_result("Language", ok, raw, ", ".join(languages))
+
+        # Currency (your Rule 4)
+        currency_objects = fields.get("currencies") or []
+        if currency_objects:
+            total += 1
+            raw = (request.form.get("currency") or "").strip()
+            ok = currency_guess_is_correct(raw, currency_objects)
+            if ok:
+                score += 1
+            add_result("Currency", ok, raw, format_currency_answer(currency_objects))
+
+        # Add overall score at top
+        results.insert(
+            0,
+            {
+                "field": "Total",
+                "ok": (score == total),
+                "your_answer": f"{score}/{total}",
+                "correct_answer": "—",
+            },
+        )
+
+    return render_template(
+        "dev_test.html",
+        country_names=country_names,
+        selected_name=selected_name,
+        fields=fields,
+        results=results,
+        format_currency_answer=format_currency_answer,
+    )
 
 
 @app.get("/health")
