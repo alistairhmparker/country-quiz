@@ -111,7 +111,7 @@ Dependencies include Flask, Flask-WTF, requests, gunicorn, pytest, tzdata, and p
 python app.py
 ```
 
-Open the landing page at `http://127.0.0.1:5000/` or go directly to free mode at `http://127.0.0.1:5000/free`.
+Open the landing page at `http://127.0.0.1:5000/`.
 
 ---
 
