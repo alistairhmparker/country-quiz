@@ -143,6 +143,33 @@ def get_countries_cached():
         raise
 
 
+# --- Filter functions ---
+
+
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
+
+@app.template_filter("uk_datetime")
+def uk_datetime(value):
+    if not value:
+        return ""
+
+    if isinstance(value, str):
+        try:
+            value = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except Exception:
+            return value
+
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+
+    uk = value.astimezone(ZoneInfo("Europe/London"))
+    return uk.strftime("%d %b %Y at %H:%M")
+
+
+# --- Helper functions ---
+
+
 def get_country_fields(country: dict):
     name = (country.get("name") or {}).get("common")
     capital = safe_first(country.get("capital") or [])

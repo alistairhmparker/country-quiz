@@ -37,7 +37,7 @@
                 <th>#</th>
                 <th>Name</th>
                 <th>Score</th>
-                <th>Date (UTC)</th>
+                <th>Date</th>
               </tr>
             </thead>
             <tbody>
@@ -46,7 +46,7 @@
                 <td>{{ loop.index }}</td>
                 <td>{{ e.name }}</td>
                 <td>{{ e.score }}/20</td>
-                <td>{{ e.played_at }}</td>
+                <td>{{ e.played_at | uk_datetime }}</td>
               </tr>
               {% endfor %}
             </tbody>

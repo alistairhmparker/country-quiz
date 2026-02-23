@@ -95,7 +95,7 @@ def get_top_entries(limit: int = 20) -> List[LeaderboardEntry]:
 def format_played_at(iso_str: str) -> str:
     """
     Convert ISO UTC time string -> friendly display.
-    Example: 2026-02-23T00:40:12+00:00 -> 23 Feb 2026, 00:40 UTC
+    Example: 2026-02-23T00:40:12+00:00 -> 23 Feb 2026
     """
     try:
         dt = datetime.fromisoformat(iso_str)
