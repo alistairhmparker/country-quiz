@@ -16,6 +16,7 @@ EXTRA_CURRENCY_ALIASES_BY_CODE: Dict[str, Set[str]] = {
     "KRW": {"won"},
     "INR": {"rupee"},
     "RUB": {"ruble", "rouble"},
+    "PLN": {"zloty"},
     # CFA francs
     "XAF": {"cfa franc", "central african cfa franc", "cfa"},
     "XOF": {"cfa franc", "west african cfa franc", "cfa"},
