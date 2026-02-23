@@ -29,13 +29,39 @@
       </p>
 
       <div class="actions">
+        <form method="post" action="{{ url_for('competition_save') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn" type="submit">Save score</button>
+        </form>
+
         <a class="btn" href="{{ url_for('landing') }}">Home</a>
         <a class="btn" href="{{ url_for('competition_start') }}">Play again</a>
       </div>
+
     </div>
 
-    <p class="muted" style="margin-top:16px;">
-      Leaderboard saving comes next phase.
-    </p>
+
+  {% if leaderboard %}
+    <h2>Leaderboard (Top 20)</h2>
+    <table style="width:100%; border-collapse:collapse; margin-top:12px;">
+      <thead>
+        <tr>
+          <th style="border:1px solid #ddd; padding:10px; text-align:left;">Name</th>
+          <th style="border:1px solid #ddd; padding:10px; text-align:left;">Score</th>
+          <th style="border:1px solid #ddd; padding:10px; text-align:left;">Date (UTC)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for e in leaderboard %}
+        <tr>
+          <td style="border:1px solid #ddd; padding:10px;">{{ e.name }}</td>
+          <td style="border:1px solid #ddd; padding:10px;">{{ e.score }}/20</td>
+          <td style="border:1px solid #ddd; padding:10px;">{{ e.played_at }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+
   </body>
 </html>

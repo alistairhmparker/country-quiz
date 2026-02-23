@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Stats / About – Country Quiz</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body { font-family: system-ui, sans-serif; margin: 24px; max-width: 900px; }
+      .card { border: 1px solid #e5e5e5; border-radius: 12px; padding: 18px; }
+      table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+      th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+      .actions { margin-top: 16px; display:flex; gap: 10px; flex-wrap: wrap; }
+      a.btn {
+        display:inline-block; padding:10px 14px; border-radius:10px;
+        border:1px solid #ddd; background:#fafafa; font-weight:650;
+        text-decoration:none; color:#111;
+      }
+      a.btn:hover { background:#f2f2f2; }
+      .muted { color: #555; }
+    </style>
+  </head>
+  <body>
+    <h1>Stats / About</h1>
+
+    <div class="card">
+      <h2>Leaderboard (Top 20)</h2>
+      {% if leaderboard %}
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Score</th>
+              <th>Date (UTC)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for e in leaderboard %}
+              <tr>
+                <td>{{ e.name }}</td>
+                <td>{{ e.score }}/20</td>
+                <td>{{ e.played_at }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No scores yet — play Competition mode to create the leaderboard.</p>
+      {% endif %}
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <h2>About</h2>
+      <p class="muted">
+        Country Quiz is a Flask web app that generates geography quiz rounds from the RestCountries dataset.
+        It includes structured validation for capitals, population tolerance scoring, language matching with curated synonyms,
+        and currency validation with ISO support.
+      </p>
+      <p class="muted">
+        Source code: <a href="https://github.com/alistairhmparker/country-quiz" target="_blank" rel="noopener">GitHub</a>
+      </p>
+      <p class="muted">
+        Built by: <strong>Alistair Parker</strong><br />
+        Contact: <strong>alistairhmparker@gmail.com</strong>
+      </p>
+    </div>
+
+    <div class="actions">
+      <a class="btn" href="{{ url_for('landing') }}">Home</a>
+      <a class="btn" href="{{ url_for('free') }}">Free mode</a>
+      <a class="btn" href="{{ url_for('competition_start') }}">Competition</a>
+    </div>
+  </body>
+</html>

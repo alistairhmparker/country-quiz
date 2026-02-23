@@ -18,8 +18,11 @@ from rules.language import language_guess_is_correct
 from rules.competition import validate_player_name
 from rules.competition import is_complete_country
 from rules.language import language_guess_is_correct
+from leaderboard import record_score, get_top_entries
+
 
 app = Flask(__name__)
+
 
 # --- Security / config ---
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-only-change-me")
@@ -39,6 +42,7 @@ RESTCOUNTRIES_URL = (
     "https://restcountries.com/v3.1/all"
     "?fields=name,capital,population,languages,currencies,flag,subregion,area,borders"
 )
+
 
 # --- Data / fallback ---
 DATA_DIR = pathlib.Path(__file__).resolve().parent / "data"
@@ -483,8 +487,8 @@ def competition_summary():
         return redirect(url_for("competition_start"))
 
     comp_score = int(session.get("comp_score") or 0)
+    leaderboard = get_top_entries(20)
 
-    # Reset in-round state but keep name/score until leaderboard saving next phase
     session["comp_in_round"] = False
     session["comp_current"] = None
 
@@ -492,12 +496,28 @@ def competition_summary():
         "competition_summary.html",
         comp_name=comp_name,
         comp_score=comp_score,
+        leaderboard=leaderboard,
     )
+
+
+@app.route("/competition/save", methods=["POST"])
+def competition_save():
+    comp_name = session.get("comp_name")
+    if not comp_name:
+        return redirect(url_for("competition_start"))
+
+    comp_score = int(session.get("comp_score") or 0)
+
+    # Record score (only updates if improved)
+    record_score(comp_name, comp_score)
+
+    return redirect(url_for("competition_summary"))
 
 
 @app.route("/stats")
 def stats():
-    return "<h1>Stats/About coming next phase</h1>", 200
+    leaderboard = get_top_entries(20)
+    return render_template("stats.html", leaderboard=leaderboard)
 
 
 @app.route("/reset")
@@ -631,6 +651,15 @@ def warm_country_cache():
 
 # Warm cache when worker starts
 warm_country_cache()
+
+
+try:
+    # Create table if needed
+    get_top_entries(1)
+    app.logger.info("Leaderboard DB ready")
+except Exception as e:
+    app.logger.warning(f"Leaderboard init failed: {e}")
+
 
 if __name__ == "__main__":
 
