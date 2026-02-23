@@ -8,13 +8,13 @@ Play it live: https://country-quiz-p3yq.onrender.com
 
 ## Game Modes
 
-### Free Mode (Endless)
+### Free Practice Mode (Endless)
 
 Endless random rounds with session-based stats: cumulative score / possible points, rounds played, and "countries explored" tracking (a country only counts once you submit, so refresh doesn't inflate stats).
 
 Route: `GET /free`
 
-### 5-Round Competition (Leaderboard)
+### 5-Round Challenge (Leaderboard)
 
 Enter a name, play 5 rounds, and post your final score to the leaderboard. Competition mode only selects "complete" countries (must have capital, population, language, and currency present). Name validation covers length/allowed chars, minimum letters, and a basic profanity filter. The leaderboard stores the **best score per player name** (only overwrites if improved).
 
@@ -25,7 +25,9 @@ Routes:
 
 ### Landing / Navigation
 
-`GET /` shows the mode picker (Free / Competition / Stats).
+`GET /` shows the primary navigation in this order: **5-Round Challenge**, **Free Practice Mode**, then **Challenge Stats**.
+
+The project About information is also shown on the landing page in a de-emphasised footer.
 
 ---
 
@@ -130,10 +132,10 @@ python -c "import secrets; print(secrets.token_urlsafe(32))"
 | `DATABASE_URL` | Enables Postgres leaderboard when available |
 | `DATA_DIR` | Overrides the local data directory used by the SQLite DB |
 | `DEV_TOOLS_ENABLED=1` | Enables the dev test harness route |
-| `ABOUT_GITHUB_URL` | About/Stats page text |
-| `ABOUT_CREATOR` | About/Stats page text |
-| `ABOUT_CONTACT` | About/Stats page text |
-| `ABOUT_BLURB` | About/Stats page text |
+| `ABOUT_GITHUB_URL` | About text shown on landing footer |
+| `ABOUT_CREATOR` | About text shown on landing footer |
+| `ABOUT_CONTACT` | About text shown on landing footer |
+| `ABOUT_BLURB` | About text shown on landing footer |
 
 ---
 

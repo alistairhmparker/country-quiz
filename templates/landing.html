@@ -15,29 +15,39 @@
 
       <div class="grid">
         <div class="card">
-          <h2>Free mode</h2>
-          <p class="muted">Endless rounds, stats tracked as you play.</p>
-          <div class="actions" style="margin-top: 12px;">
-            <a class="button" href="{{ url_for('free') }}">Play Free Mode</a>
-          </div>
-        </div>
-
-        <div class="card">
-          <h2>5-round competition</h2>
+          <h2>5-Round Challenge</h2>
           <p class="muted">Enter your name, play 5 rounds, and aim for the leaderboard.</p>
           <div class="actions" style="margin-top: 12px;">
-            <a class="button" href="{{ url_for('competition_start') }}">Start Competition</a>
+            <a class="button" href="{{ url_for('competition_start') }}">Start 5-Round Challenge</a>
           </div>
         </div>
 
         <div class="card">
-          <h2>Stats / About</h2>
-          <p class="muted">Leaderboard and information about the project.</p>
+          <h2>Free Practice Mode</h2>
+          <p class="muted">Endless rounds, stats tracked as you play.</p>
           <div class="actions" style="margin-top: 12px;">
-            <a class="button" href="{{ url_for('stats') }}">View Stats</a>
+            <a class="button" href="{{ url_for('free') }}">Start Free Practice Mode</a>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Challenge Stats</h2>
+          <p class="muted">View the challenge leaderboard and results.</p>
+          <div class="actions" style="margin-top: 12px;">
+            <a class="button" href="{{ url_for('stats') }}">View Challenge Stats</a>
           </div>
         </div>
       </div>
+
+      <footer class="footer-muted">
+        <p>{{ about_blurb }}</p>
+        <p style="margin-top: 6px;">
+          Source code: <a href="{{ about_github_url }}" target="_blank" rel="noopener">GitHub</a>
+        </p>
+        <p style="margin-top: 6px;">
+          Built by {{ about_creator }} · Contact: {{ about_contact }}
+        </p>
+      </footer>
     </div>
   </body>
 </html>

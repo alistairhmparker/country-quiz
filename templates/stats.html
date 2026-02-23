@@ -2,18 +2,18 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Stats / About – Country Quiz</title>
+    <title>Challenge Stats – Country Quiz</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     {% include "_shared_style.html" %}
   </head>
   <body>
     <div class="container">
       <div class="header">
-        <h1>Stats / About</h1>
+        <h1>Challenge Stats</h1>
       </div>
 
       <div class="card">
-        <h2>Leaderboard</h2>
+        <h2>5-Round Challenge Leaderboard</h2>
         {% if leaderboard %}
           <table>
             <thead>
@@ -34,26 +34,14 @@
             </tbody>
           </table>
         {% else %}
-          <p class="muted">No scores yet — play Competition mode to create the leaderboard.</p>
+          <p class="muted">No scores yet — play the 5-Round Challenge to create the leaderboard.</p>
         {% endif %}
-      </div>
-
-      <div class="card">
-          <h2>About this project</h2>
-          <p class="muted">{{ about_blurb }}</p>
-          <p class="muted" style="margin-top: 8px;">
-          Source code: <a href="{{ about_github_url }}" target="_blank" rel="noopener">GitHub</a>
-          </p>
-          <p class="muted" style="margin-top: 8px;">
-          Built by: <strong>{{ about_creator }}</strong><br />
-          Contact: <strong>{{ about_contact }}</strong>
-          </p>
       </div>
 
       <div class="actions">
         <a class="btn" href="{{ url_for('landing') }}">Home</a>
-        <a class="btn" href="{{ url_for('free') }}">Free mode</a>
-        <a class="btn" href="{{ url_for('competition_start') }}">Competition</a>
+        <a class="btn" href="{{ url_for('competition_start') }}">5-Round Challenge</a>
+        <a class="btn" href="{{ url_for('free') }}">Free Practice Mode</a>
       </div>
     </div>
   </body>
