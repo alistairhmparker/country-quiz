@@ -115,11 +115,12 @@
         </div>
         {% endif %}
 
+        {% if not comp_mode %}
         <div class="stats-bar" aria-label="Quiz stats">
             <span>🌍 {{ countries_seen }} explored</span>
             <span>🏆 {{ total_score }} / {{ total_possible }} points</span>
-            <span>🔄 {{ rounds }} rounds</span>
         </div>
+        {% endif %}
 
         <div class="header">
             <span class="globe" aria-hidden="true">🌍</span>
