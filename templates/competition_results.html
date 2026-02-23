@@ -7,43 +7,51 @@
     {% include "_shared_style.html" %}
   </head>
   <body>
-    <h1>Round {{ comp_round }} of 5</h1>
-    <p class="muted">
-      Player: <strong>{{ comp_name }}</strong><br />
-      Round score: <strong>{{ score }}/{{ total }}</strong><br />
-      Running total: <strong>{{ comp_score }}/20</strong>
-    </p>
+    <div class="container">
+      <div class="header">
+        <h1>Round {{ comp_round }} of 5</h1>
+      </div>
 
-    <h2>{{ name }}</h2>
+      <div class="card">
+        <p class="muted">
+          Player: <strong>{{ comp_name }}</strong><br />
+          Round score: <strong>{{ score }}/{{ total }}</strong><br />
+          Running total: <strong>{{ comp_score }}/20</strong>
+        </p>
+      </div>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Field</th>
-          <th>OK?</th>
-          <th>Your answer</th>
-          <th>Correct answer</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for r in results %}
-          <tr>
-            <td>{{ r.field }}</td>
-            <td class="ok">{{ "✅" if r.ok else "❌" }}</td>
-            <td>{{ r.your_answer }}</td>
-            <td>{{ r.correct_answer }}</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+      <div class="card">
+        <h2>{{ name }}</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>OK?</th>
+              <th>Your answer</th>
+              <th>Correct answer</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in results %}
+              <tr>
+                <td>{{ r.field }}</td>
+                <td class="ok">{{ "✅" if r.ok else "❌" }}</td>
+                <td>{{ r.your_answer }}</td>
+                <td>{{ r.correct_answer }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
 
-    <div class="actions">
-      {% if comp_round < 5 %}
-        <a class="btn" href="{{ url_for('competition_play') }}">Next round</a>
-      {% else %}
-        <a class="btn" href="{{ url_for('competition_summary') }}">Summary</a>
-      {% endif %}
-      <a class="btn" href="{{ url_for('landing') }}">Home</a>
+      <div class="actions">
+        {% if comp_round < 5 %}
+          <a class="btn" href="{{ url_for('competition_play') }}">Next round</a>
+        {% else %}
+          <a class="btn" href="{{ url_for('competition_summary') }}">Summary</a>
+        {% endif %}
+        <a class="btn" href="{{ url_for('landing') }}">Home</a>
+      </div>
     </div>
   </body>
 </html>
