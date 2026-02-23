@@ -17,6 +17,13 @@ PROFANITY = {
 }
 
 
+_WS_RE = re.compile(r"\s+")
+
+def normalize_player_name(name_raw: str) -> str:
+    """Strip ends and collapse internal whitespace to single spaces."""
+    return _WS_RE.sub(" ", (name_raw or "").strip())
+
+
 def validate_player_name(name_raw: str) -> tuple[bool, str]:
     """
     Returns (ok, error_message).
@@ -29,7 +36,7 @@ def validate_player_name(name_raw: str) -> tuple[bool, str]:
     if not name_raw:
         return False, "Please enter a name."
 
-    name = name_raw.strip()
+    name = normalize_player_name(name_raw)
     if not name:
         return False, "Please enter a name."
 

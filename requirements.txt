@@ -9,3 +9,7 @@ requests
 pytest
 
 tzdata
+
+psycopg[binary]
+
+
