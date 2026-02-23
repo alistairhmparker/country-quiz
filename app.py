@@ -548,7 +548,8 @@ def competition_save():
 
 @app.route("/stats")
 def stats():
-    leaderboard = get_top_entries(20)
+    leaderboard = get_top_entries(LEADERBOARD_LIMIT)
+    leaderboard_view = [entry for entry in leaderboard]
     return render_template(
     "stats.html",
     leaderboard=leaderboard_view,
