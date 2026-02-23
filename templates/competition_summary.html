@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Competition Summary</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body { font-family: system-ui, sans-serif; margin: 24px; max-width: 900px; }
+      .card { border: 1px solid #e5e5e5; border-radius: 12px; padding: 18px; }
+      .actions { margin-top: 16px; display:flex; gap: 10px; flex-wrap: wrap; }
+      a.btn {
+        display:inline-block; padding:10px 14px; border-radius:10px;
+        border:1px solid #ddd; background:#fafafa; font-weight:650;
+        text-decoration:none; color:#111;
+      }
+      a.btn:hover { background:#f2f2f2; }
+      .muted { color:#555; }
+    </style>
+  </head>
+  <body>
+    <h1>Competition Summary</h1>
+
+    <div class="card">
+      <p class="muted">
+        Player: <strong>{{ comp_name }}</strong>
+      </p>
+      <p>
+        Final score: <strong>{{ comp_score }}/20</strong>
+      </p>
+
+      <div class="actions">
+        <a class="btn" href="{{ url_for('landing') }}">Home</a>
+        <a class="btn" href="{{ url_for('competition_start') }}">Play again</a>
+      </div>
+    </div>
+
+    <p class="muted" style="margin-top:16px;">
+      Leaderboard saving comes next phase.
+    </p>
+  </body>
+</html>

@@ -204,7 +204,7 @@
             <p class="country-name">{{ name }}</p>
         </div>
 
-        <form method="POST" action="/submit" id="quiz-form" autocomplete="off">
+        <form method="POST" action="{{ url_for('competition_play') if comp_mode else url_for('submit') }}" id="quiz-form" autocomplete="off">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
             <div class="questions">

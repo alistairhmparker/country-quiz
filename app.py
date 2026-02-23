@@ -16,7 +16,8 @@ from rules.currency import (
 )
 from rules.language import language_guess_is_correct
 from rules.competition import validate_player_name
-
+from rules.competition import is_complete_country
+from rules.language import language_guess_is_correct
 
 app = Flask(__name__)
 
@@ -148,6 +149,30 @@ def get_country_fields(country: dict):
         "languages": languages,
         "currencies": currency_objects,  # list of dicts {code,name,symbol}
     }
+
+
+def pick_unseen_complete_country(countries: list[dict], seen_names: set[str]) -> dict:
+    """
+    Pick a random country that has all four answers and hasn't been used in this competition run.
+    If exhausted, reset seen (very unlikely in 5 rounds).
+    """
+    candidates = []
+    for c in countries:
+        name = ((c.get("name") or {}).get("common") or "")
+        if not name or name in seen_names:
+            continue
+        fields = get_country_fields(c)
+        if is_complete_country(fields):
+            candidates.append(fields)
+
+    if not candidates:
+        # fallback: allow repeats if somehow exhausted
+        for c in countries:
+            fields = get_country_fields(c)
+            if is_complete_country(fields):
+                candidates.append(fields)
+
+    return random.choice(candidates)
 
 
 # --- Routes ---
@@ -311,9 +336,163 @@ def competition_start():
     return redirect(url_for("competition_play"))
 
 
-@app.route("/competition/play")
+@app.route("/competition/play", methods=["GET", "POST"])
 def competition_play():
-    return "<h1>Competition play loop coming next phase</h1>", 200
+    # Must have started competition
+    comp_name = session.get("comp_name")
+    if not comp_name:
+        return redirect(url_for("competition_start"))
+
+    # Ensure state exists
+    session.setdefault("comp_round", 1)
+    session.setdefault("comp_score", 0)
+    session.setdefault("comp_seen", [])
+    session.setdefault("comp_in_round", False)
+    session.setdefault("comp_current", None)
+
+    countries = get_countries_cached()
+
+    if request.method == "GET":
+        # Keep same country during an in-progress round
+        if session.get("comp_in_round") and session.get("comp_current"):
+            current = session["comp_current"]
+        else:
+            seen = set(session.get("comp_seen") or [])
+            current = pick_unseen_complete_country(countries, seen)
+            session["comp_current"] = current
+            session["comp_in_round"] = True
+
+        return render_template(
+            "index.html",  # reuse existing question page
+            name=current.get("name"),
+            capital=current.get("capital"),
+            population=current.get("population"),
+            languages=current.get("languages") or [],
+            currencies=current.get("currencies") or [],
+            # Hide free-mode stats in template (we’ll ignore these in display if template uses them)
+            total_score=0,
+            total_possible=0,
+            rounds=0,
+            countries_seen=0,
+            comp_mode=True,
+            comp_round=session["comp_round"],
+            comp_name=comp_name,
+        )
+
+    # POST: score this round
+    current = session.get("comp_current") or {}
+    score = 0
+    total = 0
+    results = []
+
+    def add_result(field: str, ok: bool, your_answer: str, correct_answer: str):
+        results.append(
+            {
+                "field": field,
+                "ok": ok,
+                "your_answer": your_answer if your_answer else "—",
+                "correct_answer": correct_answer if correct_answer else "—",
+            }
+        )
+
+    # Capital
+    capital = current.get("capital")
+    if capital:
+        total += 1
+        raw = (request.form.get("capital") or "").strip()
+        ok = norm_text(raw) == norm_text(capital)
+        if ok:
+            score += 1
+        add_result("Capital", ok, raw, capital)
+
+    # Population (+/- 20%)
+    population = current.get("population")
+    if isinstance(population, int) and population > 0:
+        total += 1
+        raw_display = ((request.form.get("population_display") or "").strip())
+        raw_hidden = ((request.form.get("population") or "").strip())
+        raw = raw_display or raw_hidden
+
+        guess_num = parse_population_strict(raw_hidden)
+        ok = False if guess_num is None else (abs(guess_num - population) / population) <= 0.20
+
+        if ok:
+            score += 1
+        add_result("Population", ok, raw, f"{population:,}")
+
+    # Language (new rules)
+    languages = current.get("languages") or []
+    if languages:
+        total += 1
+        raw = (request.form.get("language") or "").strip()
+        ok = language_guess_is_correct(raw, languages)
+        if ok:
+            score += 1
+        add_result("Language", ok, raw, ", ".join(languages))
+
+    # Currency
+    currency_objects = current.get("currencies") or []
+    if currency_objects:
+        total += 1
+        raw = (request.form.get("currency") or "").strip()
+        ok = currency_guess_is_correct(raw, currency_objects)
+        if ok:
+            score += 1
+        add_result("Currency", ok, raw, format_currency_answer(currency_objects))
+
+    # Update competition totals
+    session["comp_score"] = int(session.get("comp_score") or 0) + score
+
+    # Mark this country as used in comp (after submit)
+    name = current.get("name")
+    if name:
+        session["comp_seen"] = (session.get("comp_seen") or []) + [name]
+
+    # End round
+    session["comp_in_round"] = False
+    session["comp_current"] = None
+
+    comp_round = int(session.get("comp_round") or 1)
+    comp_score = int(session.get("comp_score") or 0)
+
+    # Advance round counter AFTER scoring
+    # Round shown on results is the one just completed (comp_round).
+    # Increment for next GET.
+    if comp_round < 5:
+        session["comp_round"] = comp_round + 1
+    else:
+        # keep at 5
+        session["comp_round"] = 5
+
+    return render_template(
+        "competition_results.html",
+        name=current.get("name"),
+        score=score,
+        total=total,
+        results=results,
+        comp_round=comp_round,
+        comp_score=comp_score,
+        comp_name=comp_name,
+    )
+
+
+@app.route("/competition/summary")
+def competition_summary():
+    comp_name = session.get("comp_name")
+    if not comp_name:
+        return redirect(url_for("competition_start"))
+
+    comp_score = int(session.get("comp_score") or 0)
+
+    # Reset in-round state but keep name/score until leaderboard saving next phase
+    session["comp_in_round"] = False
+    session["comp_current"] = None
+
+    return render_template(
+        "competition_summary.html",
+        comp_name=comp_name,
+        comp_score=comp_score,
+    )
 
 
 @app.route("/stats")

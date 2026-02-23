@@ -50,3 +50,16 @@ def validate_player_name(name_raw: str) -> tuple[bool, str]:
         return False, "Please choose a different name."
 
     return True, ""
+
+
+def is_complete_country(fields: dict) -> bool:
+    """
+    Competition mode only: require all four Qs to be present.
+    """
+    return (
+        bool(fields.get("capital"))
+        and isinstance(fields.get("population"), int)
+        and fields.get("population") > 0
+        and bool(fields.get("languages"))
+        and bool(fields.get("currencies"))
+    )
