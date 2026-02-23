@@ -509,25 +509,6 @@ def competition_play():
     )
 
 
-@app.route("/competition/save", methods=["POST"])
-def competition_save():
-    comp_name = session.get("comp_name")
-    if not comp_name:
-        return redirect(url_for("competition_start"))
-
-    comp_score = int(session.get("comp_score") or 0)
-
-    record_score(comp_name, comp_score)
-
-    # Clear comp state AFTER saving, but keep the name
-    clear_competition_session(keep_name=True)
-
-    # Store last score for the summary page
-    session["last_comp_score"] = comp_score
-
-    return redirect(url_for("competition_summary"))
-
-
 @app.route("/competition/summary")
 def competition_summary():
     comp_name = session.get("comp_name") or ""
