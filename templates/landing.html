@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Country Quiz</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body { font-family: system-ui, sans-serif; margin: 24px; max-width: 900px; }
+      .card { border: 1px solid #e5e5e5; border-radius: 12px; padding: 18px; }
+      .grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 16px; }
+      @media (min-width: 700px) { .grid { grid-template-columns: 1fr 1fr 1fr; } }
+      a.button {
+        display: inline-block;
+        text-decoration: none;
+        text-align: center;
+        padding: 12px 14px;
+        border-radius: 10px;
+        border: 1px solid #ddd;
+        font-weight: 650;
+        color: #111;
+        background: #fafafa;
+      }
+      a.button:hover { background: #f2f2f2; }
+      .muted { color: #555; }
+    </style>
+  </head>
+  <body>
+    <h1>Country Quiz</h1>
+    <p class="muted">
+      Choose a mode:
+    </p>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Free mode</h2>
+        <p class="muted">Endless rounds, stats tracked as you play.</p>
+        <a class="button" href="{{ url_for('free') }}">Play Free Mode</a>
+      </div>
+
+      <div class="card">
+        <h2>5-round competition</h2>
+        <p class="muted">Enter your name, play 5 rounds, aim for the leaderboard.</p>
+        <a class="button" href="{{ url_for('competition_start') }}">Start Competition</a>
+      </div>
+
+      <div class="card">
+        <h2>Stats / About</h2>
+        <p class="muted">Leaderboard and information about the project.</p>
+        <a class="button" href="{{ url_for('stats') }}">View Stats</a>
+      </div>
+    </div>
+  </body>
+</html>

@@ -201,8 +201,9 @@
         </div>
 
         <div class="actions">
-            <a class="btn" href="/">Play Again</a>
-            <a class="link" href="/reset">Reset stats</a>
+            <a class="btn" href="{{ url_for('free') }}">Play Again</a>
+            <a class="link" href="{{ url_for('reset') }}">Reset stats</a>
+            <a class="link" href="{{ url_for('landing') }}">Home</a>
         </div>
     </div>
 </body>

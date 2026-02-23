@@ -18,10 +18,20 @@ from rules.language import language_guess_is_correct
 from rules.competition import validate_player_name
 from rules.competition import is_complete_country
 from rules.language import language_guess_is_correct
-from leaderboard import record_score, get_top_entries
+from leaderboard import record_score, get_top_entries, format_played_at
 
 
 app = Flask(__name__)
+
+
+# --- About ---
+ABOUT_GITHUB_URL = os.environ.get("ABOUT_GITHUB_URL", "https://github.com/alistairhmparker/country-quiz")
+ABOUT_CREATOR = os.environ.get("ABOUT_CREATOR", "Alistair Parker")
+ABOUT_CONTACT = os.environ.get("ABOUT_CONTACT", "your-email@example.com")
+ABOUT_BLURB = os.environ.get(
+    "ABOUT_BLURB",
+    "Country Quiz is a Flask web app that generates geography quiz rounds from the RestCountries dataset."
+)
 
 
 # --- Security / config ---
@@ -35,6 +45,8 @@ app.config.update(
 )
 
 csrf = CSRFProtect(app)
+
+LEADERBOARD_LIMIT = 20
 
 DEV_TOOLS_ENABLED = os.environ.get("DEV_TOOLS_ENABLED") == "1"
 
@@ -177,6 +189,22 @@ def pick_unseen_complete_country(countries: list[dict], seen_names: set[str]) ->
                 candidates.append(fields)
 
     return random.choice(candidates)
+
+
+def clear_competition_session(keep_name: bool = False):
+    keys = [
+        "comp_name",
+        "comp_round",
+        "comp_score",
+        "comp_seen",
+        "comp_in_round",
+        "comp_current",
+    ]
+    name = session.get("comp_name")
+    for k in keys:
+        session.pop(k, None)
+    if keep_name and name:
+        session["comp_name"] = name
 
 
 # --- Routes ---
@@ -480,24 +508,23 @@ def competition_play():
     )
 
 
-@app.route("/competition/summary")
-def competition_summary():
+@app.route("/competition/save", methods=["POST"])
+def competition_save():
     comp_name = session.get("comp_name")
     if not comp_name:
         return redirect(url_for("competition_start"))
 
     comp_score = int(session.get("comp_score") or 0)
-    leaderboard = get_top_entries(20)
 
-    session["comp_in_round"] = False
-    session["comp_current"] = None
+    record_score(comp_name, comp_score)
 
-    return render_template(
-        "competition_summary.html",
-        comp_name=comp_name,
-        comp_score=comp_score,
-        leaderboard=leaderboard,
-    )
+    # Clear comp state AFTER saving, but keep the name
+    clear_competition_session(keep_name=True)
+
+    # Store last score for the summary page
+    session["last_comp_score"] = comp_score
+
+    return redirect(url_for("competition_summary"))
 
 
 @app.route("/competition/save", methods=["POST"])
@@ -508,8 +535,13 @@ def competition_save():
 
     comp_score = int(session.get("comp_score") or 0)
 
-    # Record score (only updates if improved)
     record_score(comp_name, comp_score)
+
+    # Clear comp state AFTER saving, but keep the name
+    clear_competition_session(keep_name=True)
+
+    # Store last score for the summary page
+    session["last_comp_score"] = comp_score
 
     return redirect(url_for("competition_summary"))
 
@@ -517,7 +549,14 @@ def competition_save():
 @app.route("/stats")
 def stats():
     leaderboard = get_top_entries(20)
-    return render_template("stats.html", leaderboard=leaderboard)
+    return render_template(
+    "stats.html",
+    leaderboard=leaderboard_view,
+    about_github_url=ABOUT_GITHUB_URL,
+    about_creator=ABOUT_CREATOR,
+    about_contact=ABOUT_CONTACT,
+    about_blurb=ABOUT_BLURB,
+)
 
 
 @app.route("/reset")

@@ -23,7 +23,7 @@
     <h1>Stats / About</h1>
 
     <div class="card">
-      <h2>Leaderboard (Top 20)</h2>
+      <h2>Leaderboard</h2>
       {% if leaderboard %}
         <table>
           <thead>
@@ -49,19 +49,14 @@
     </div>
 
     <div class="card" style="margin-top:16px;">
-      <h2>About</h2>
-      <p class="muted">
-        Country Quiz is a Flask web app that generates geography quiz rounds from the RestCountries dataset.
-        It includes structured validation for capitals, population tolerance scoring, language matching with curated synonyms,
-        and currency validation with ISO support.
-      </p>
-      <p class="muted">
-        Source code: <a href="https://github.com/alistairhmparker/country-quiz" target="_blank" rel="noopener">GitHub</a>
-      </p>
-      <p class="muted">
-        Built by: <strong>Alistair Parker</strong><br />
-        Contact: <strong>alistairhmparker@gmail.com</strong>
-      </p>
+        <p class="muted">{{ about_blurb }}</p>
+        <p class="muted">
+        Source code: <a href="{{ about_github_url }}" target="_blank" rel="noopener">GitHub</a>
+        </p>
+        <p class="muted">
+        Built by: <strong>{{ about_creator }}</strong><br />
+        Contact: <strong>{{ about_contact }}</strong>
+        </p>
     </div>
 
     <div class="actions">

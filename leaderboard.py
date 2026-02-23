@@ -8,7 +8,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Optional
 
-
 DATA_DIR = Path(os.environ.get("DATA_DIR", "data"))
 DB_PATH = DATA_DIR / "leaderboard.db"
 
@@ -91,3 +90,17 @@ def get_top_entries(limit: int = 20) -> List[LeaderboardEntry]:
         ).fetchall()
 
     return [LeaderboardEntry(name=r["name"], score=int(r["score"]), played_at=r["played_at"]) for r in rows]
+
+
+def format_played_at(iso_str: str) -> str:
+    """
+    Convert ISO UTC time string -> friendly display.
+    Example: 2026-02-23T00:40:12+00:00 -> 23 Feb 2026, 00:40 UTC
+    """
+    try:
+        dt = datetime.fromisoformat(iso_str)
+        # ensure timezone-aware display
+        dt_utc = dt.astimezone(timezone.utc)
+        return dt_utc.strftime("%d %b %Y")
+    except Exception:
+        return iso_str
