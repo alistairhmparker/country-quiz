@@ -1,180 +1,180 @@
-# Country Quiz
+# Country Quiz 🌍
 
-A web-based geography quiz built with Flask. Each round presents a random country and challenges the user to identify its capital, population, official language, and currency.
+A Flask-based geography quiz that generates rounds from the RestCountries dataset. Each round asks for the capital city, population (accepted within ±20%), official language (with sensible, curated synonyms), and currency (ISO codes + strict alias rules).
 
-The application emphasises structured validation, deterministic rules, and clean architecture, while remaining lightweight and easy to deploy.
+Play it live: https://country-quiz-p3yq.onrender.com
 
-## Overview
+---
 
-Country Quiz balances playability with accuracy:
+## Game Modes
 
-- Text answers are normalised (case + accent insensitive).
-- Population guesses are accepted within a ±20% tolerance.
-- Currency matching supports ISO codes, descriptor-stripped names (e.g. `manat`), and controlled alias rules.
-- Session-based scoring tracks cumulative performance.
+### Free Mode (Endless)
 
-The application is server-light (session cookies only) and suitable for simple public deployment.
+Endless random rounds with session-based stats: cumulative score / possible points, rounds played, and "countries explored" tracking (a country only counts once you submit, so refresh doesn't inflate stats).
 
-## Features
+Route: `GET /free`
 
-- Random country selection per round
-- Session-based cumulative scoring
-- "Countries explored" tracking
-- Population accepted within ±20%
-- Structured currency validation supporting:
-  - ISO codes (`USD`, `GBP`, etc.)
-  - Official names
-  - Descriptor-stripped names (e.g. `manat`, `lek`)
-  - Controlled default behaviour (`dollar` ⇒ USD)
-  - Curated aliases (e.g. `cfa franc`)
-- Case and accent insensitive text matching
-- CSRF protection (Flask-WTF)
-- API response caching
-- Local fallback dataset for resilience
-- Mobile-friendly UI
-- Dev-only test harness for rule verification
+### 5-Round Competition (Leaderboard)
 
-## Technology Stack
+Enter a name, play 5 rounds, and post your final score to the leaderboard. Competition mode only selects "complete" countries (must have capital, population, language, and currency present). Name validation covers length/allowed chars, minimum letters, and a basic profanity filter. The leaderboard stores the **best score per player name** (only overwrites if improved).
 
-- Python 3
-- Flask
-- Flask-WTF (CSRF)
-- Gunicorn (production server)
-- RestCountries API
-- HTML / CSS / vanilla JavaScript
-- Pytest (unit testing)
+Routes:
+- `GET/POST /competition/start`
+- `GET/POST /competition/play`
+- `GET /competition/summary` — records score and shows leaderboard
+
+### Landing / Navigation
+
+`GET /` shows the mode picker (Free / Competition / Stats).
+
+---
+
+## Answer Validation Rules
+
+**Capital** — Exact match after normalisation (case + accent insensitive; punctuation collapsed).
+
+**Population** — Parsed strictly as an integer (digits with optional commas/spaces). Correct if within ±20% of the official value.
+
+**Language** — Uses a curated allowlist of sensible synonyms (e.g. *Filipino* ⇄ *Tagalog*, *Persian* ⇄ *Farsi*, *Chinese* ⇄ *Mandarin*). Also splits labels like "Persian (Farsi)" into acceptable tokens.
+
+**Currency** — Deterministic hierarchy (no fuzzy matching): ISO code match (strongest), exact official currency name (normalised), core alias derived from official name (typically last word, e.g. "Azerbaijani manat" → "manat"), special-case defaults (bare "dollar" means USD only), curated aliases for specific codes (e.g. XOF/XAF "CFA franc", GBP "pound/sterling"), and currency symbol accepted only when the country has a single currency (to avoid ambiguity).
+
+---
+
+## Data Source, Caching, and Resilience
+
+The primary source is RestCountries `v3.1/all` with a limited field set for speed. Data is held in an in-memory cache with a 6-hour TTL. A local fallback is periodically written to `data/countries_fallback.json` (best-effort, won't break requests). If the API is unreachable and there's no usable cache, the app attempts to load this fallback JSON.
+
+---
+
+## Leaderboard Storage
+
+Two supported backends:
+
+**Postgres** (recommended for deployment) — enabled when `DATABASE_URL` is set and `psycopg` is available.
+
+**SQLite** (local dev fallback) — stored at `data/leaderboard.db` (or `${DATA_DIR}/leaderboard.db` if `DATA_DIR` is set).
+
+---
 
 ## Project Structure
-
-```
+```text
 country-quiz/
 ├── app.py
-├── rules/
-│   ├── __init__.py
-│   └── currency.py
+├── leaderboard.py
 ├── utils.py
+├── rules/
+│   ├── competition.py
+│   ├── currency.py
+│   └── language.py
 ├── templates/
+│   ├── landing.html
 │   ├── index.html
 │   ├── results.html
-│   └── dev_test.html
+│   ├── competition_start.html
+│   ├── competition_results.html
+│   ├── competition_summary.html
+│   └── stats.html
 ├── tests/
-│   └── test_currency_rules.py
-├── data/                # local fallback (ignored by git)
-├── .github/
+│   ├── test_currency_rules.py
+│   └── test_language_rules.py
+├── .github/workflows/
+│   └── ping.yml
 ├── requirements.txt
 └── README.md
 ```
 
-## Answer Rules
-
-### Capital & Language
-
-Must match after normalisation (case + accent insensitive).
-
-### Population
-
-Correct if within ±20% of the official value.
-
-### Currency
-
-Validation follows a structured hierarchy:
-
-1. ISO code match (strongest)
-2. Exact official name
-3. Descriptor-stripped core name
-   - e.g. `"Azerbaijani manat"` ⇒ `manat`
-4. Controlled defaults
-   - `"dollar"` alone maps to USD only
-5. Curated aliases
-   - e.g. `cfa franc`
-
-This keeps the system predictable while avoiding over-permissive fuzzy matching.
+---
 
 ## Running Locally
 
-**1. Clone the repository**
-
+**1. Clone**
 ```bash
 git clone https://github.com/alistairhmparker/country-quiz.git
 cd country-quiz
 ```
 
 **2. Install dependencies**
-
 ```bash
+python -m venv .venv
+# Windows: .venv\Scripts\activate
+# macOS/Linux: source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-**3. Run the development server**
+Dependencies include Flask, Flask-WTF, requests, gunicorn, pytest, tzdata, and psycopg (for Postgres).
 
+**3. Run**
 ```bash
 python app.py
 ```
 
-Visit: `http://127.0.0.1:5000`
+Open the landing page at `http://127.0.0.1:5000/` or go directly to free mode at `http://127.0.0.1:5000/free`.
 
-## Dev Tools
+---
 
-To enable development-only routes:
+## Environment Variables
 
-**PowerShell**
+**Required (production)**
 
-```powershell
-$env:DEV_TOOLS_ENABLED="1"
-python app.py
-```
-
-Available routes:
-
-- `/dev/test` — rule validation harness
-- `/dev/refresh-fallback` — refresh local country dataset
-
-## Testing
-
-Run unit tests:
-
-```bash
-pytest
-```
-
-Tests currently cover currency rule behaviour (e.g. `"dollar"` default logic, CFA handling, descriptor stripping).
-
-## Deployment (Render)
-
-Designed for straightforward deployment on Render or similar platforms.
-
-> Render Free sleeps after inactivity. See `.github/workflows/ping.yml` for keep-awake pings.
-
-**Build command**
-
-```bash
-pip install -r requirements.txt
-```
-
-**Start command**
-
-```bash
-gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --threads 2 --timeout 60
-```
-
-**Required Environment Variable**
-
-```
-FLASK_SECRET_KEY=<long random string>
-```
-
-Generate locally:
-
+`FLASK_SECRET_KEY` — long random secret for session signing. Generate one with:
 ```bash
 python -c "import secrets; print(secrets.token_urlsafe(32))"
 ```
 
-## Data Source
+**Optional**
 
-Country data provided by [RestCountries](https://restcountries.com).
+| Variable | Description |
+|---|---|
+| `FLASK_HTTPS=1` | Marks session cookies as Secure when behind HTTPS |
+| `DATABASE_URL` | Enables Postgres leaderboard when available |
+| `DATA_DIR` | Overrides the local data directory used by the SQLite DB |
+| `DEV_TOOLS_ENABLED=1` | Enables the dev test harness route |
+| `ABOUT_GITHUB_URL` | About/Stats page text |
+| `ABOUT_CREATOR` | About/Stats page text |
+| `ABOUT_CONTACT` | About/Stats page text |
+| `ABOUT_BLURB` | About/Stats page text |
 
-A local fallback dataset is stored in `data/` for resilience if the API is unavailable.
+---
+
+## Dev Tools
+
+When enabled, a dev-only page lets you pick a country and manually test scoring against the current rule logic.
+
+Enable and run:
+```bash
+$env:DEV_TOOLS_ENABLED="1"
+python app.py
+```
+
+Route: `GET/POST /dev/test`
+
+---
+
+## Testing
+```bash
+pytest
+```
+
+Unit tests focus on deterministic rule behaviour (currency + language).
+
+**Health check** — `GET /health` returns `ok` (used for uptime / keep-awake pings).
+
+---
+
+## Deployment
+
+**Gunicorn (example)**
+```bash
+gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --threads 2 --timeout 60
+```
+
+Works well on Render-style platforms.
+
+**Keep-awake workflow (Render free tier)** — This repo includes a GitHub Actions workflow that pings `/health` on a schedule to reduce sleeping.
+
+---
 
 ## License
 
-MIT License
+MIT
