@@ -236,7 +236,13 @@ def clear_competition_session(keep_name: bool = False):
 
 @app.route("/")
 def landing():
-    return render_template("landing.html")
+    return render_template(
+        "landing.html",
+        about_blurb=ABOUT_BLURB,
+        about_github_url=ABOUT_GITHUB_URL,
+        about_creator=ABOUT_CREATOR,
+        about_contact=ABOUT_CONTACT,
+    )
 
 
 @app.route("/free")
