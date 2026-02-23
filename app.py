@@ -27,7 +27,7 @@ app = Flask(__name__)
 # --- About ---
 ABOUT_GITHUB_URL = os.environ.get("ABOUT_GITHUB_URL", "https://github.com/alistairhmparker/country-quiz")
 ABOUT_CREATOR = os.environ.get("ABOUT_CREATOR", "Alistair Parker")
-ABOUT_CONTACT = os.environ.get("ABOUT_CONTACT", "your-email@example.com")
+ABOUT_CONTACT = os.environ.get("ABOUT_CONTACT", "alistairhmparker@gmail.com")
 ABOUT_BLURB = os.environ.get(
     "ABOUT_BLURB",
     "Country Quiz is a Flask web app that generates geography quiz rounds from the RestCountries dataset."
@@ -409,6 +409,7 @@ def competition_play():
             comp_mode=True,
             comp_round=session["comp_round"],
             comp_name=comp_name,
+            comp_score=int(session.get("comp_score") or 0),
         )
 
     # POST: score this round
@@ -527,23 +528,37 @@ def competition_save():
     return redirect(url_for("competition_summary"))
 
 
-@app.route("/competition/save", methods=["POST"])
-def competition_save():
-    comp_name = session.get("comp_name")
-    if not comp_name:
+@app.route("/competition/summary")
+def competition_summary():
+    comp_name = session.get("comp_name") or ""
+    comp_score_live = session.get("comp_score")
+
+    # If arriving right after round 5, comp_score is present: auto-save it
+    if comp_name and comp_score_live is not None:
+        comp_score = int(comp_score_live)
+        record_score(comp_name, comp_score)
+
+        # Clear comp state but keep name + last score for display
+        clear_competition_session(keep_name=True)
+        session["last_comp_score"] = comp_score
+
+    comp_score = session.get("last_comp_score")
+
+    if not comp_name or comp_score is None:
         return redirect(url_for("competition_start"))
 
-    comp_score = int(session.get("comp_score") or 0)
+    leaderboard = get_top_entries(LEADERBOARD_LIMIT)
+    leaderboard_view = [
+        {"name": e.name, "score": e.score, "played_at": format_played_at(e.played_at)}
+        for e in leaderboard
+    ]
 
-    record_score(comp_name, comp_score)
-
-    # Clear comp state AFTER saving, but keep the name
-    clear_competition_session(keep_name=True)
-
-    # Store last score for the summary page
-    session["last_comp_score"] = comp_score
-
-    return redirect(url_for("competition_summary"))
+    return render_template(
+        "competition_summary.html",
+        comp_name=comp_name,
+        comp_score=int(comp_score),
+        leaderboard=leaderboard_view,
+    )
 
 
 @app.route("/stats")

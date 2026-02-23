@@ -186,6 +186,30 @@
     </style>
 </head>
 <body>
+    
+    {% if comp_mode %}
+    {% set completed = (comp_round | int) - 1 %}
+    <div class="card" style="margin-bottom: 14px;">
+        <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:baseline;">
+        <div>
+            <strong>Competition</strong> — {{ comp_name }}
+        </div>
+        <div>
+            Round <strong>{{ comp_round }}</strong> of <strong>5</strong>
+        </div>
+        <div>
+            Score: <strong>{{ comp_score }}</strong> / 20
+        </div>
+        </div>
+
+        <div style="margin-top:10px; font-size: 18px; letter-spacing: 2px;">
+        {% for i in range(1, 6) %}
+            {% if i <= completed %}●{% else %}○{% endif %}
+        {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
     <div class="container">
         <div class="stats-bar" aria-label="Quiz stats">
             <span>🌍 {{ countries_seen }} explored</span>
