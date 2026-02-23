@@ -4,6 +4,7 @@ import time
 import random
 import json
 import pathlib
+import re
 
 import requests
 from flask import Flask, session, render_template, request, redirect, url_for
@@ -14,6 +15,7 @@ from rules.currency import (
     format_currency_answer,
 )
 from rules.language import language_guess_is_correct
+from rules.competition import validate_player_name
 
 
 app = Flask(__name__)
@@ -149,8 +151,14 @@ def get_country_fields(country: dict):
 
 
 # --- Routes ---
+
 @app.route("/")
-def index():
+def landing():
+    return render_template("landing.html")
+
+
+@app.route("/free")
+def free():
     countries = get_countries_cached()
 
     session.setdefault("seen", [])  # explored = submitted
@@ -282,6 +290,35 @@ def submit():
         rounds=session["rounds"],
         countries_seen=len(session["seen"]),
     )
+
+
+@app.route("/competition/start", methods=["GET", "POST"])
+def competition_start():
+    if request.method == "GET":
+        return render_template("competition_start.html", error="", name_value="")
+
+    name_raw = (request.form.get("name") or "").strip()
+    ok, err = validate_player_name(name_raw)
+    if not ok:
+        return render_template("competition_start.html", error=err, name_value=name_raw)
+
+    # Initialise competition session state
+    session["comp_name"] = name_raw
+    session["comp_round"] = 1
+    session["comp_score"] = 0
+    session["comp_seen"] = []
+
+    return redirect(url_for("competition_play"))
+
+
+@app.route("/competition/play")
+def competition_play():
+    return "<h1>Competition play loop coming next phase</h1>", 200
+
+
+@app.route("/stats")
+def stats():
+    return "<h1>Stats/About coming next phase</h1>", 200
 
 
 @app.route("/reset")
