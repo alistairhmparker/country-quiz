@@ -7,49 +7,54 @@
     {% include "_shared_style.html" %}
   </head>
   <body>
-    <h1>Stats / About</h1>
+    <div class="container">
+      <div class="header">
+        <h1>Stats / About</h1>
+      </div>
 
-    <div class="card">
-      <h2>Leaderboard</h2>
-      {% if leaderboard %}
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Score</th>
-              <th>Date (UTC)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for e in leaderboard %}
+      <div class="card">
+        <h2>Leaderboard</h2>
+        {% if leaderboard %}
+          <table>
+            <thead>
               <tr>
-                <td>{{ e.name }}</td>
-                <td>{{ e.score }}/20</td>
-                <td>{{ e.played_at }}</td>
+                <th>Name</th>
+                <th>Score</th>
+                <th>Date (UTC)</th>
               </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      {% else %}
-        <p class="muted">No scores yet — play Competition mode to create the leaderboard.</p>
-      {% endif %}
-    </div>
+            </thead>
+            <tbody>
+              {% for e in leaderboard %}
+                <tr>
+                  <td>{{ e.name }}</td>
+                  <td>{{ e.score }}/20</td>
+                  <td>{{ e.played_at }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p class="muted">No scores yet — play Competition mode to create the leaderboard.</p>
+        {% endif %}
+      </div>
 
-    <div class="card" style="margin-top:16px;">
-        <p class="muted">{{ about_blurb }}</p>
-        <p class="muted">
-        Source code: <a href="{{ about_github_url }}" target="_blank" rel="noopener">GitHub</a>
-        </p>
-        <p class="muted">
-        Built by: <strong>{{ about_creator }}</strong><br />
-        Contact: <strong>{{ about_contact }}</strong>
-        </p>
-    </div>
+      <div class="card">
+          <h2>About this project</h2>
+          <p class="muted">{{ about_blurb }}</p>
+          <p class="muted" style="margin-top: 8px;">
+          Source code: <a href="{{ about_github_url }}" target="_blank" rel="noopener">GitHub</a>
+          </p>
+          <p class="muted" style="margin-top: 8px;">
+          Built by: <strong>{{ about_creator }}</strong><br />
+          Contact: <strong>{{ about_contact }}</strong>
+          </p>
+      </div>
 
-    <div class="actions">
-      <a class="btn" href="{{ url_for('landing') }}">Home</a>
-      <a class="btn" href="{{ url_for('free') }}">Free mode</a>
-      <a class="btn" href="{{ url_for('competition_start') }}">Competition</a>
+      <div class="actions">
+        <a class="btn" href="{{ url_for('landing') }}">Home</a>
+        <a class="btn" href="{{ url_for('free') }}">Free mode</a>
+        <a class="btn" href="{{ url_for('competition_start') }}">Competition</a>
+      </div>
     </div>
   </body>
 </html>

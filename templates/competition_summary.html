@@ -7,49 +7,52 @@
     {% include "_shared_style.html" %}
   </head>
   <body>
-    <h1>Competition Summary</h1>
-
-    <div class="card">
-      <p class="muted">
-        Player: <strong>{{ comp_name }}</strong>
-      </p>
-      <p>
-        Final score: <strong>{{ comp_score }}/20</strong>
-      </p>
-
-      <div class="actions">
-          <a class="btn" href="{{ url_for('competition_start') }}">Play again</a>
-          <a class="btn" href="{{ url_for('landing') }}">Home</a>
+    <div class="container">
+      <div class="header">
+        <h1>Competition Summary</h1>
       </div>
-      <p class="muted" style="margin-top:10px;">Your score is saved automatically.</p>
-      
 
+      <div class="card">
+        <p class="muted">
+          Player: <strong>{{ comp_name }}</strong>
+        </p>
+        <p style="margin-top: 8px;">
+          Final score: <strong>{{ comp_score }}/20</strong>
+        </p>
+
+        <div class="actions" style="margin-top: 14px;">
+            <a class="btn" href="{{ url_for('competition_start') }}">Play again</a>
+            <a class="btn" href="{{ url_for('landing') }}">Home</a>
+        </div>
+
+        <p class="muted" style="margin-top:10px;">Your score is saved automatically.</p>
+      </div>
+
+      {% if leaderboard %}
+        <div class="card">
+          <h2>Leaderboard</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Score</th>
+                <th>Date (UTC)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for e in leaderboard %}
+              <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ e.name }}</td>
+                <td>{{ e.score }}/20</td>
+                <td>{{ e.played_at }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endif %}
     </div>
-
-
-  {% if leaderboard %}
-    <h2>Leaderboard</h2>
-    <table style="width:100%; border-collapse:collapse; margin-top:12px;">
-      <thead>
-        <tr>
-          <th style="border:1px solid #ddd; padding:10px; text-align:left;">#</th>
-          <th style="border:1px solid #ddd; padding:10px; text-align:left;">Name</th>
-          <th style="border:1px solid #ddd; padding:10px; text-align:left;">Score</th>
-          <th style="border:1px solid #ddd; padding:10px; text-align:left;">Date (UTC)</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for e in leaderboard %}
-        <tr>
-          <td style="border:1px solid #ddd; padding:10px;">{{ loop.index }}</td>
-          <td style="border:1px solid #ddd; padding:10px;">{{ e.name }}</td>
-          <td style="border:1px solid #ddd; padding:10px;">{{ e.score }}/20</td>
-          <td style="border:1px solid #ddd; padding:10px;">{{ e.played_at }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  {% endif %}
-
   </body>
 </html>

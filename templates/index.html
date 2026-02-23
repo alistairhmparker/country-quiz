@@ -5,40 +5,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Country Quiz</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+    {% include "_shared_style.html" %}
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            background-color: #0f1923;
-            background-image: radial-gradient(ellipse at 20% 50%, #1a2a3a 0%, transparent 60%),
-                              radial-gradient(ellipse at 80% 20%, #1a1f2e 0%, transparent 50%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Source Sans 3', sans-serif;
-            color: #e8dcc8;
-            padding: 12px;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 580px;
-            padding: 20px;
-            animation: fadeIn 0.8s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
         .globe {
             font-size: 48px;
             display: block;
@@ -51,28 +19,12 @@
             50% { transform: rotateY(180deg); }
         }
 
-        h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: 2.2rem;
-            color: #c9a84c;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-
-        .subtitle {
-            font-size: 0.85rem;
-            color: #7a8a9a;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            margin-top: 6px;
-        }
-
         .country-card {
             background: linear-gradient(135deg, #1a2a3a, #162030);
             border: 1px solid #2a4060;
             border-radius: 12px;
             padding: 28px;
-            margin-bottom: 24px;
+            margin-bottom: 6px;
             text-align: center;
             position: relative;
             overflow: hidden;
@@ -107,7 +59,7 @@
             display: flex;
             flex-direction: column;
             gap: 16px;
-            margin-bottom: 28px;
+            margin-bottom: 16px;
         }
 
         .question {
@@ -120,15 +72,6 @@
 
         .question:focus-within { border-color: #c9a84c; }
 
-        .question label {
-            display: block;
-            font-size: 0.75rem;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            color: #7a8a9a;
-            margin-bottom: 10px;
-        }
-
         .question input {
             width: 100%;
             background: transparent;
@@ -140,77 +83,38 @@
             padding: 6px 0;
             outline: none;
             transition: border-color 0.2s;
+            border-radius: 0;
         }
 
         .question input:focus { border-bottom-color: #c9a84c; }
         .question input::placeholder { color: #3a5070; }
-
-        .submit-btn {
-            width: 100%;
-            padding: 16px;
-            background: linear-gradient(135deg, #c9a84c, #a8863a);
-            color: #0f1923;
-            border: none;
-            border-radius: 10px;
-            font-family: 'Playfair Display', serif;
-            font-size: 1.1rem;
-            font-weight: 700;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
-        }
-
-        .submit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(201,168,76,0.3);
-        }
-
-        .submit-btn:active { transform: translateY(0); }
-        .submit-btn[disabled] { opacity: 0.6; cursor: not-allowed; box-shadow: none; transform: none; }
-
-        .stats-bar {
-            display: flex;
-            justify-content: space-between;
-            gap: 10px;
-            background: #162030;
-            border: 1px solid #2a4060;
-            border-radius: 10px;
-            padding: 12px 16px;
-            margin-bottom: 24px;
-            font-size: 0.85rem;
-            color: #7a8a9a;
-            letter-spacing: 1px;
-            flex-wrap: wrap;
-        }
     </style>
 </head>
 <body>
-    
-    {% if comp_mode %}
-    {% set completed = (comp_round | int) - 1 %}
-    <div class="card" style="margin-bottom: 14px;">
-        <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:baseline;">
-        <div>
-            <strong>Competition</strong> — {{ comp_name }}
-        </div>
-        <div>
-            Round <strong>{{ comp_round }}</strong> of <strong>5</strong>
-        </div>
-        <div>
-            Score: <strong>{{ comp_score }}</strong> / 20
-        </div>
-        </div>
-
-        <div style="margin-top:10px; font-size: 18px; letter-spacing: 2px;">
-        {% for i in range(1, 6) %}
-            {% if i <= completed %}●{% else %}○{% endif %}
-        {% endfor %}
-        </div>
-    </div>
-    {% endif %}
-
     <div class="container">
+        {% if comp_mode %}
+        {% set completed = (comp_round | int) - 1 %}
+        <div class="card comp-banner">
+            <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:baseline;">
+            <div>
+                <strong>Competition</strong> — {{ comp_name }}
+            </div>
+            <div>
+                Round <strong>{{ comp_round }}</strong> of <strong>5</strong>
+            </div>
+            <div>
+                Score: <strong>{{ comp_score }}</strong> / 20
+            </div>
+            </div>
+
+            <div class="comp-dots">
+            {% for i in range(1, 6) %}
+                {% if i <= completed %}●{% else %}○{% endif %}
+            {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
         <div class="stats-bar" aria-label="Quiz stats">
             <span>🌍 {{ countries_seen }} explored</span>
             <span>🏆 {{ total_score }} / {{ total_possible }} points</span>
@@ -242,18 +146,7 @@
                 {% if population %}
                 <div class="question">
                     <label for="population_display">Population</label>
-
-                    <!-- Visible formatted input -->
-                    <input
-                        id="population_display"
-                        name="population_display"
-                        type="text"
-                        inputmode="numeric"
-                        autocomplete="off"
-                        placeholder="Enter the population..."
-                    >
-
-                    <!-- Hidden raw digits sent to server -->
+                    <input id="population_display" name="population_display" type="text" inputmode="numeric" autocomplete="off" placeholder="Enter the population...">
                     <input id="population" type="hidden" name="population" value="">
                 </div>
                 {% endif %}
@@ -278,7 +171,6 @@
     </div>
 
     <script>
-      // Prevent double-submit
       const form = document.getElementById('quiz-form');
       const btn = document.getElementById('submit-btn');
 
@@ -287,7 +179,6 @@
         btn.textContent = 'Submitting...';
       });
 
-      // Population: commas in visible input; raw digits in hidden field
       const popDisplay = document.getElementById('population_display');
       const popHidden = document.getElementById('population');
 

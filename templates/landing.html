@@ -5,31 +5,38 @@
     <title>Country Quiz</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     {% include "_shared_style.html" %}
-    </style>
   </head>
   <body>
-    <h1>Country Quiz</h1>
-    <p class="muted">
-      Choose a mode:
-    </p>
-
-    <div class="grid">
-      <div class="card">
-        <h2>Free mode</h2>
-        <p class="muted">Endless rounds, stats tracked as you play.</p>
-        <a class="button" href="{{ url_for('free') }}">Play Free Mode</a>
+    <div class="container">
+      <div class="header">
+        <h1>Country Quiz</h1>
+        <p class="subtitle">Choose your game mode</p>
       </div>
 
-      <div class="card">
-        <h2>5-round competition</h2>
-        <p class="muted">Enter your name, play 5 rounds, aim for the leaderboard.</p>
-        <a class="button" href="{{ url_for('competition_start') }}">Start Competition</a>
-      </div>
+      <div class="grid">
+        <div class="card">
+          <h2>Free mode</h2>
+          <p class="muted">Endless rounds, stats tracked as you play.</p>
+          <div class="actions" style="margin-top: 12px;">
+            <a class="button" href="{{ url_for('free') }}">Play Free Mode</a>
+          </div>
+        </div>
 
-      <div class="card">
-        <h2>Stats / About</h2>
-        <p class="muted">Leaderboard and information about the project.</p>
-        <a class="button" href="{{ url_for('stats') }}">View Stats</a>
+        <div class="card">
+          <h2>5-round competition</h2>
+          <p class="muted">Enter your name, play 5 rounds, and aim for the leaderboard.</p>
+          <div class="actions" style="margin-top: 12px;">
+            <a class="button" href="{{ url_for('competition_start') }}">Start Competition</a>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Stats / About</h2>
+          <p class="muted">Leaderboard and information about the project.</p>
+          <div class="actions" style="margin-top: 12px;">
+            <a class="button" href="{{ url_for('stats') }}">View Stats</a>
+          </div>
+        </div>
       </div>
     </div>
   </body>

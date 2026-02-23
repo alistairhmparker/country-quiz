@@ -7,27 +7,33 @@
     {% include "_shared_style.html" %}
   </head>
   <body>
-    <h1>5-round Competition</h1>
-    <p class="muted">
-      Enter a name to start. Your best score will appear on the leaderboard.
-    </p>
+    <div class="container">
+      <div class="header">
+        <h1>5-round Competition</h1>
+        <p class="subtitle">Challenge mode</p>
+      </div>
 
-    <div class="card">
-      <form method="post">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="card">
+        <p class="muted" style="margin-bottom: 12px;">
+          Enter a name to start. Your best score will appear on the leaderboard.
+        </p>
 
-        <label for="name">Name</label>
-        <input id="name" name="name" maxlength="24" placeholder="At least 3 letters" value="{{ name_value or '' }}" />
+        <form method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-        {% if error %}
-          <div class="error">{{ error }}</div>
-        {% endif %}
+          <label for="name">Name</label>
+          <input id="name" name="name" maxlength="24" placeholder="At least 3 letters" value="{{ name_value or '' }}" />
 
-        <div class="row">
-          <button type="submit">Start</button>
-          <a class="button" href="{{ url_for('landing') }}">Back</a>
-        </div>
-      </form>
+          {% if error %}
+            <div class="error">{{ error }}</div>
+          {% endif %}
+
+          <div class="row" style="margin-top: 12px;">
+            <button type="submit">Start</button>
+            <a class="button" href="{{ url_for('landing') }}">Back</a>
+          </div>
+        </form>
+      </div>
     </div>
   </body>
 </html>
