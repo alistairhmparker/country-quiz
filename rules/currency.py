@@ -32,9 +32,6 @@ BARE_WORD_DEFAULT_CODE: Dict[str, str] = {
 # Today this is just {"dollar"} but keeping it as a set makes it easy to extend.
 TYPE_WORDS_REQUIRE_DESCRIPTOR: Set[str] = set(BARE_WORD_DEFAULT_CODE.keys())
 
-# Common currency symbols for crude detection (so we compare raw symbol).
-_SYMBOL_CHARS = set("€£$¥₩₽₹₺₫₦₱₲₴₡₸₵₭₮₪₨")
-
 
 def _core_aliases_from_official_name(code_u: str, official_name: str) -> Set[str]:
     """
@@ -83,7 +80,6 @@ def currency_aliases(
       - official name accepted (normalized)
       - curated aliases
       - core alias (usually last word), with exclusions like "dollar"
-      - symbol only if single-currency-country
     """
     code_u = (code or "").upper()
     aliases: Set[str] = set()
@@ -100,9 +96,6 @@ def currency_aliases(
 
     if name:
         aliases |= _core_aliases_from_official_name(code_u, name)
-
-    if single_currency_country and symbol:
-        aliases.add(symbol.strip())
 
     return aliases
 
@@ -124,9 +117,6 @@ def currency_guess_is_correct(guess_raw: str, currency_objects: List[dict]) -> b
 
     guess_code = norm_code(guess_raw)
     guess_name = norm_text(guess_raw)
-    guess_symbol = guess_raw
-
-    single = len(currency_objects) == 1
     present_codes = {(c.get("code") or "").upper() for c in currency_objects}
     present_codes.discard("")
 
@@ -144,17 +134,12 @@ def currency_guess_is_correct(guess_raw: str, currency_objects: List[dict]) -> b
             code=c.get("code") or "",
             name=c.get("name") or "",
             symbol=c.get("symbol"),
-            single_currency_country=single,
+            single_currency_country=len(currency_objects) == 1,
         )
 
         for a in aliases:
-            # If alias contains currency symbol characters, compare raw symbol
-            if any(ch in _SYMBOL_CHARS for ch in a):
-                if single and guess_symbol == a:
-                    return True
-            else:
-                if guess_name and guess_name == a:
-                    return True
+            if guess_name and guess_name == a:
+                return True
 
     return False
 
