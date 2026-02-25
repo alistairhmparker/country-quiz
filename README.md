@@ -39,7 +39,7 @@ The project About information is also shown on the landing page in a de-emphasis
 
 **Language** — Uses a curated allowlist of sensible synonyms (e.g. *Filipino* ⇄ *Tagalog*, *Persian* ⇄ *Farsi*, *Chinese* ⇄ *Mandarin*). Also splits labels like "Persian (Farsi)" into acceptable tokens.
 
-**Currency** — Deterministic hierarchy (no fuzzy matching): ISO code match (strongest), exact official currency name (normalised), core alias derived from official name (typically last word, e.g. "Azerbaijani manat" → "manat"), special-case defaults (bare "dollar" means USD only), curated aliases for specific codes (e.g. XOF/XAF "CFA franc", GBP "pound/sterling"), and currency symbol accepted only when the country has a single currency (to avoid ambiguity).
+**Currency** — Deterministic hierarchy (no fuzzy matching): ISO code match (strongest), exact official currency name (normalised), core alias derived from official name (typically last word, e.g. "Azerbaijani manat" → "manat"), special-case defaults (bare "dollar" means USD only), and curated aliases for specific codes (e.g. XOF/XAF "CFA franc", GBP "pound/sterling").
 
 ---
 
